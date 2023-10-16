@@ -28,8 +28,6 @@ enum Commands {
         question: String,
         /// Available choices
         options: Vec<String>,
-        #[arg(short, long, default_value_t = String::from("="))]
-        separator: String,
     },
 }
 
@@ -37,7 +35,7 @@ fn program() -> Result<(), u8> {
     let cli = Cli::parse();
     match &cli.command {
         Some(Commands::Ask { question }) => {
-            ask::ask(question);
+            ask::ask!(question);
             Ok(())
         }
         Some(Commands::Confirm {
@@ -47,20 +45,14 @@ fn program() -> Result<(), u8> {
             true => Ok(()),
             false => Err(1),
         },
-        Some(Commands::Select {
-            question,
-            options,
-            separator,
-        }) => {
-            match ask::select(
-                question,
-                options.iter().map(String::as_str).collect(),
-                separator.as_str(),
-            ) {
-                _ => Ok(()),
-            }
+        Some(Commands::Select { question, options }) => {
+            println!(
+                "{}",
+                ask::select(question, options.iter().map(String::as_str).collect())
+            );
+            Ok(())
         }
-        None => Ok(()),
+        None => Err(1),
     }
 }
 

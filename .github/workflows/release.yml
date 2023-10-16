@@ -1,0 +1,87 @@
+on:
+  release:
+    types: [created]
+
+jobs:
+  release:
+    name: Release - ${{ matrix.platform.release_for }}
+    runs-on: ${{ matrix.platform.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - run: rustup toolchain install stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/master' }}
+      - name: Build binary
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          command: ${{ matrix.platform.command }}
+          target: ${{ matrix.platform.target }}
+          args: "--locked --release"
+          strip: true
+      - name: Package as archive
+        shell: bash
+        run: |
+          cd target/${{ matrix.platform.target }}/release
+          if [[ "${{ matrix.platform.os }}" == "windows-latest" ]]; then
+            7z a ../../../${{ matrix.platform.name }} ${{ matrix.platform.bin }}
+          else
+            tar czvf ../../../${{ matrix.platform.name }} ${{ matrix.platform.bin }}
+          fi
+          cd -
+        if: startsWith( github.ref, 'refs/tags/v' )
+      - name: Generate SHA-256
+        run: shasum -a 256 ${{ matrix.platform.name }} > ${{ matrix.platform.name }}.sha256
+        if: startsWith( github.ref, 'refs/tags/v' )
+      - name: Publish release artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.platform.name }}
+          path: ${{ matrix.platform.name }}
+        if: startsWith( github.ref, 'refs/tags/v' )
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload ${{ github.event.release.tag_name }} ${{ matrix.platform.name }} && gh release upload ${{ github.event.release.tag_name }} ${{ matrix.platform.name }}.sha256
+        if: startsWith( github.ref, 'refs/tags/v' )
+    strategy:
+      matrix:
+        platform:
+          - release_for: Linux-x86_64
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            bin: script-wizard
+            name: script-wizard-Linux-x86_64.tar.gz
+            command: build
+
+          - release_for: Linux-aarch64
+            os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            bin: script-wizard
+            name: script-wizard-Linux-aarch64.tar.gz
+            command: build
+
+          # - release_for: Windows-x86_64
+          #   os: windows-latest
+          #   target: x86_64-pc-windows-msvc
+          #   bin: script-wizard.exe
+          #   name: script-wizard-Windows-x86_64.zip
+          #   command: both
+
+          # - release_for: macOS-x86_64
+          #   os: macOS-latest
+          #   target: x86_64-apple-darwin
+          #   bin: script-wizard
+          #   name: script-wizard-Darwin-x86_64.tar.gz
+          #   command: both
+
+          # - release_for: FreeBSD-x86_64
+          #   os: ubuntu-latest
+          #   target: x86_64-unknown-freebsd
+          #   bin: script-wizard
+          #   name: script-wizard-FreeBSD-x86_64.tar.gz
+          #   command: build
+
+            # more release targets here ...
+

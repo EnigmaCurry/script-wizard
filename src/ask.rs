@@ -7,13 +7,31 @@ pub enum Confirmation {
     No,
 }
 
-pub fn ask(question: &str) {
+pub fn ask_prompt(question: &str, allow_blank: bool) {
     if question == "" {
         panic!("Blank question")
     }
-    let status = Text::new(question).prompt();
-    println!("{}", status.unwrap())
+    match allow_blank {
+        true => println!("{}", Text::new(question).prompt().unwrap()),
+        false => {
+            let mut a = String::from("");
+            while a == "" {
+                a = Text::new(question).prompt().unwrap();
+            }
+            println!("{}", a)
+        }
+    }
 }
+
+macro_rules! ask {
+    ($question: expr) => {
+        ask::ask_prompt($question, false)
+    };
+    ($question: expr, $allow_blank: expr) => {
+        ask::ask_prompt($question, $allow_blank)
+    };
+}
+pub(crate) use ask;
 
 pub fn confirm(question: &str, default_answer: Option<Confirmation>) -> bool {
     let mut c = Confirm::new(question);
@@ -29,7 +47,10 @@ pub fn confirm(question: &str, default_answer: Option<Confirmation>) -> bool {
     }
 }
 
-pub fn select(question: &str, options: Vec<&str>, separator: &str) -> u16 {
+pub fn select(question: &str, options: Vec<&str>) -> String {
     let ans: Result<&str, InquireError> = Select::new(question, options).prompt();
-    16
+    match ans {
+        Ok(selection) => String::from(selection),
+        Err(_) => panic!("Cancelled selection"),
+    }
 }
