@@ -12,13 +12,29 @@ script is capable of.
 
 ## Install
 
+### Install from release binary
+
 The latest release is found on the [releases
 page](https://github.com/EnigmaCurry/script-wizard/releases). Make
 sure to download the archive for the correct system architecture
 (x86_64 for intel or amd systems, aarch64 for arm64).
 
-If your system architecture is not supported, you can try to build it
-yourself:
+```
+## Generic binary installation for all supported platforms:
+cd ~/Downloads
+ARCHIVE=script-wizard-$(uname -s)-$(uname -m).tar.gz
+curl -LO https://github.com/Enigmacurry/script-wizard/releases/latest/download/${ARCHIVE}
+tar xfv ${ARCHIVE}
+sudo install script-wizard /usr/local/bin/script-wizard
+```
+
+If a binary is missing for your OS and/or architecture, please open an
+issue, and let me know.
+
+### Build and install from source code
+
+If you cannot (or don't want to) install the binary version, you can
+try building it from source code:
 
  * You will need to install stable Rust according to
 [rustup](https://rustup.rs/) (includes `cargo` command).
