@@ -1,5 +1,5 @@
 use clap::ValueEnum;
-use inquire::{Confirm, InquireError, Select, Text};
+use inquire::{Confirm, InquireError, MultiSelect, Select, Text};
 
 #[derive(Clone, ValueEnum)]
 pub enum Confirmation {
@@ -51,6 +51,14 @@ pub fn choose(question: &str, options: Vec<&str>) -> String {
     let ans: Result<&str, InquireError> = Select::new(question, options).prompt();
     match ans {
         Ok(selection) => String::from(selection),
+        Err(_) => panic!("Cancelled selection"),
+    }
+}
+
+pub fn select(question: &str, options: Vec<&str>) -> Vec<String> {
+    let ans = MultiSelect::new(question, options).prompt();
+    match ans {
+        Ok(selection) => selection.iter().map(|&x| x.into()).collect(),
         Err(_) => panic!("Cancelled selection"),
     }
 }

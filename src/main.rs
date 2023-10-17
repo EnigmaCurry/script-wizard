@@ -22,8 +22,15 @@ enum Commands {
         /// Default answer yes/no
         default_answer: Option<ask::Confirmation>,
     },
-    /// Choose from a list of choices
+    /// Choose a single item from a list of choices
     Choose {
+        /// Selection prompt
+        question: String,
+        /// Available choices
+        options: Vec<String>,
+    },
+    /// Select multiple items from a list of choices
+    Select {
         /// Selection prompt
         question: String,
         /// Available choices
@@ -50,6 +57,13 @@ fn program() -> Result<(), u8> {
                 "{}",
                 ask::choose(question, options.iter().map(String::as_str).collect())
             );
+            Ok(())
+        }
+        Some(Commands::Select { question, options }) => {
+            let selections = ask::select(question, options.iter().map(String::as_str).collect());
+            for s in selections.iter() {
+                println!("{}", s);
+            }
             Ok(())
         }
         None => Err(1),

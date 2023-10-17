@@ -76,9 +76,22 @@ response from the list:
 # Set the alias to make it easier to use:
 alias choose='script-wizard select'
 
-SELECTED=$(choose "Select your character class" "Rogue" "Wizard" "Paladin" "Cleric" "Bard")
+CHOSEN=$(choose "Select your character class" "Rogue" "Wizard" "Paladin" "Cleric" "Bard")
 
 # You can use an option from a bash array too:
 options=("red" "blue" "greenish orange" "purple")
 COLOR=$(choose "Choose a color" "${options[@]}")
+```
+
+### select
+
+Present a list of options to the user and have them select *multiple*
+responses (zero or more) from the list:
+
+```
+readarray -t SELECTED < <(script-wizard select "Which games do you like?" "Rocket League" "Portal" "Quake" "Magic the Gathering")
+
+echo "These are the games you said you like:"
+# Use printf to print one per line (echo would merge into one line):
+printf '%s\n' "${SELECTED[@]}"
 ```
