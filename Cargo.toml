@@ -1,6 +1,6 @@
 [package]
 name = "script-wizard"
-version = "0.1.6"
+version = "0.1.7"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.3.23", features = ["derive", "env"] }
 inquire = "0.6.2"
+serde_json = "1.0.107"

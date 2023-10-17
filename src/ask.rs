@@ -64,8 +64,18 @@ pub fn choose(question: &str, default: &str, options: Vec<&str>) -> String {
     }
 }
 
-pub fn select(question: &str, default: Vec<&str>, options: Vec<&str>) -> Vec<String> {
-    let ans = MultiSelect::new(question, options).prompt();
+pub fn select(question: &str, default: &str, options: Vec<&str>) -> Vec<String> {
+    let defaults: Vec<&str> = serde_json::from_str(default).unwrap_or(vec![]);
+    let mut default_indices = vec![];
+    for (index, item) in options.iter().enumerate() {
+        match defaults.iter().find(|&r| r == item) {
+            Some(_) => default_indices.append(&mut vec![index]),
+            None => {}
+        };
+    }
+    let ans = MultiSelect::new(question, options)
+        .with_default(&default_indices)
+        .prompt();
     match ans {
         Ok(selection) => selection.iter().map(|&x| x.into()).collect(),
         Err(_) => panic!("Cancelled selection"),

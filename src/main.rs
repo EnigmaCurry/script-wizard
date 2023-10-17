@@ -41,7 +41,7 @@ enum Commands {
         options: Vec<String>,
         /// Default answer
         #[arg(short, long, value_name = "JSON_ARRAY")]
-        default: Option<Vec<String>>,
+        default: Option<String>,
     },
 }
 
@@ -70,7 +70,7 @@ fn program() -> Result<(), u8> {
                 "{}",
                 ask::choose(
                     question,
-                    default.clone().unwrap().as_str(),
+                    default.clone().unwrap_or(String::from("")).as_str(),
                     options.iter().map(String::as_str).collect()
                 )
             );
@@ -83,17 +83,13 @@ fn program() -> Result<(), u8> {
         }) => {
             let selections = ask::select(
                 question,
-                default
-                    .clone()
-                    .unwrap()
-                    .iter()
-                    .map(String::as_str)
-                    .collect(),
+                default.clone().unwrap_or("".to_string()).as_str(),
                 options.iter().map(String::as_str).collect(),
             );
-            for s in selections.iter() {
-                println!("{}", s);
-            }
+            println!(
+                "{}",
+                serde_json::to_string(&selections).unwrap_or("[]".to_string())
+            );
             Ok(())
         }
         None => Err(1),
