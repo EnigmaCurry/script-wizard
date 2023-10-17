@@ -14,14 +14,14 @@ enum Commands {
     Ask {
         /// The question to ask
         question: String,
-        default_answer: Option<String>,
+        default: Option<String>,
     },
     /// Ask an interactive yes/no question
     Confirm {
         /// Ask a yes/no question
         question: String,
         /// Default answer yes/no
-        default_answer: Option<ask::Confirmation>,
+        default: Option<ask::Confirmation>,
     },
     /// Choose a single item from a list of choices
     Choose {
@@ -29,6 +29,9 @@ enum Commands {
         question: String,
         /// Available choices
         options: Vec<String>,
+        /// Default answer
+        #[arg(short, long, value_name = "ITEM")]
+        default: Option<String>,
     },
     /// Select multiple items from a list of choices
     Select {
@@ -36,38 +39,58 @@ enum Commands {
         question: String,
         /// Available choices
         options: Vec<String>,
+        /// Default answer
+        #[arg(short, long, value_name = "JSON_ARRAY")]
+        default: Option<Vec<String>>,
     },
 }
 
 fn program() -> Result<(), u8> {
     let cli = Cli::parse();
     match &cli.command {
-        Some(Commands::Ask {
-            question,
-            default_answer,
-        }) => {
+        Some(Commands::Ask { question, default }) => {
             ask::ask!(
                 question,
-                default_answer.clone().unwrap_or(String::from("")).as_str()
+                default.clone().unwrap_or(String::from("")).as_str()
             );
             Ok(())
         }
-        Some(Commands::Confirm {
+        Some(Commands::Confirm { question, default }) => {
+            match ask::confirm(question, default.clone()) {
+                true => Ok(()),
+                false => Err(1),
+            }
+        }
+        Some(Commands::Choose {
             question,
-            default_answer,
-        }) => match ask::confirm(question, default_answer.clone()) {
-            true => Ok(()),
-            false => Err(1),
-        },
-        Some(Commands::Choose { question, options }) => {
+            options,
+            default,
+        }) => {
             println!(
                 "{}",
-                ask::choose(question, options.iter().map(String::as_str).collect())
+                ask::choose(
+                    question,
+                    default.clone().unwrap().as_str(),
+                    options.iter().map(String::as_str).collect()
+                )
             );
             Ok(())
         }
-        Some(Commands::Select { question, options }) => {
-            let selections = ask::select(question, options.iter().map(String::as_str).collect());
+        Some(Commands::Select {
+            question,
+            options,
+            default,
+        }) => {
+            let selections = ask::select(
+                question,
+                default
+                    .clone()
+                    .unwrap()
+                    .iter()
+                    .map(String::as_str)
+                    .collect(),
+                options.iter().map(String::as_str).collect(),
+            );
             for s in selections.iter() {
                 println!("{}", s);
             }
