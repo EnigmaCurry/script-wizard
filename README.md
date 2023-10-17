@@ -74,7 +74,7 @@ response from the list:
 
 ```
 # Set the alias to make it easier to use:
-alias choose='script-wizard select'
+alias choose='script-wizard choose'
 
 CHOSEN=$(choose "Select your character class" "Rogue" "Wizard" "Paladin" "Cleric" "Bard")
 
