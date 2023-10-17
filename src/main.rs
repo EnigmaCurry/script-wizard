@@ -43,6 +43,24 @@ enum Commands {
         #[arg(short, long, value_name = "JSON_ARRAY")]
         default: Option<String>,
     },
+    /// Choose date
+    Date {
+        /// Selection prompt
+        question: String,
+        /// Default answer
+        #[arg(default_value = "%Y-%m-%d", long, value_name = "FORMAT")]
+        format: Option<String>,
+        #[arg(long, value_name = "DATE")]
+        default: Option<String>,
+        #[arg(long, value_name = "DATE")]
+        min_date: Option<String>,
+        #[arg(long, value_name = "DATE")]
+        max_date: Option<String>,
+        #[arg(default_value = "sunday", long, value_name = "WEEKDAY")]
+        week_start: Option<chrono::Weekday>,
+        #[arg(long, value_name = "MESSAGE")]
+        help_message: Option<String>,
+    },
 }
 
 fn program() -> Result<(), u8> {
@@ -90,6 +108,27 @@ fn program() -> Result<(), u8> {
                 "{}",
                 serde_json::to_string(&selections).unwrap_or("[]".to_string())
             );
+            Ok(())
+        }
+        Some(Commands::Date {
+            question,
+            default,
+            min_date,
+            max_date,
+            week_start,
+            help_message,
+            format,
+        }) => {
+            let date = ask::date(
+                question,
+                default.clone().unwrap_or("".to_string()).as_str(),
+                min_date.clone().unwrap_or("".to_string()).as_str(),
+                max_date.clone().unwrap_or("".to_string()).as_str(),
+                week_start.clone().unwrap_or(chrono::Weekday::Sun),
+                help_message.clone().unwrap_or("".to_string()).as_str(),
+                format.clone().unwrap_or("".to_string()).as_str(),
+            );
+            println!("{}", date);
             Ok(())
         }
         None => Err(1),

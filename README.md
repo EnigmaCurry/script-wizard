@@ -111,3 +111,12 @@ echo "These are the games you said you like:"
 # Use printf to print one per line (echo would merge into one line):
 printf '%s\n' "${SELECTED[@]}"
 ```
+
+### date
+
+Present a date picker to the user:
+
+```
+# Pick a date between 2023/10/01 and 2023/10/20:
+DATE=$(script-wizard date "Enter a date" --week-start monday --format "%Y-%m-%d" --min-date "2023-10-01" --max-date "2023-10-20" --help-message "yadda yadda")
+```
