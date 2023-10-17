@@ -14,6 +14,7 @@ enum Commands {
     Ask {
         /// The question to ask
         question: String,
+        default_answer: Option<String>,
     },
     /// Ask an interactive yes/no question
     Confirm {
@@ -41,8 +42,14 @@ enum Commands {
 fn program() -> Result<(), u8> {
     let cli = Cli::parse();
     match &cli.command {
-        Some(Commands::Ask { question }) => {
-            ask::ask!(question);
+        Some(Commands::Ask {
+            question,
+            default_answer,
+        }) => {
+            ask::ask!(
+                question,
+                default_answer.clone().unwrap_or(String::from("")).as_str()
+            );
             Ok(())
         }
         Some(Commands::Confirm {

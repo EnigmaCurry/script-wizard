@@ -7,16 +7,19 @@ pub enum Confirmation {
     No,
 }
 
-pub fn ask_prompt(question: &str, allow_blank: bool) {
+pub fn ask_prompt(question: &str, default: &str, allow_blank: bool) {
     if question == "" {
         panic!("Blank question")
     }
     match allow_blank {
-        true => println!("{}", Text::new(question).prompt().unwrap()),
+        true => println!(
+            "{}",
+            Text::new(question).with_default(default).prompt().unwrap()
+        ),
         false => {
             let mut a = String::from("");
             while a == "" {
-                a = Text::new(question).prompt().unwrap();
+                a = Text::new(question).with_default(default).prompt().unwrap();
             }
             println!("{}", a)
         }
@@ -24,11 +27,14 @@ pub fn ask_prompt(question: &str, allow_blank: bool) {
 }
 
 macro_rules! ask {
-    ($question: expr) => {
-        ask::ask_prompt($question, false)
+    ($question: expr, $default: expr, $allow_blank: expr) => {
+        ask::ask_prompt($question, $default, $allow_blank)
     };
-    ($question: expr, $allow_blank: expr) => {
-        ask::ask_prompt($question, $allow_blank)
+    ($question: expr, $default: expr) => {
+        ask::ask_prompt($question, $default, false)
+    };
+    ($question: expr) => {
+        ask::ask_prompt($question, "", false)
     };
 }
 pub(crate) use ask;
