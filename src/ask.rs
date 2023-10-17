@@ -47,7 +47,7 @@ pub fn confirm(question: &str, default_answer: Option<Confirmation>) -> bool {
     }
 }
 
-pub fn select(question: &str, options: Vec<&str>) -> String {
+pub fn choose(question: &str, options: Vec<&str>) -> String {
     let ans: Result<&str, InquireError> = Select::new(question, options).prompt();
     match ans {
         Ok(selection) => String::from(selection),

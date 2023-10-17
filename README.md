@@ -40,7 +40,11 @@ architecture.
 Ask the user a question and capture the response:
 
 ```
-NAME=$(script-wizard ask "What is your name?")
+# Set the alias to make it easier to use:
+alias ask='script-wizard ask'
+
+# Record the user's response into the NAME variable:
+NAME=$(ask "What is your name?")
 ```
 
 ### confirm
@@ -49,26 +53,32 @@ Ask the user a yes/no question, with a prepared default response (eg.
 `yes` is the default here) :
 
 ```
+# Set the alias to make it easier to use:
+alias confirm='script-wizard confirm'
+
 # Confirm returns an exit code: 0=yes 1=no :
-if script-wizard confirm "Do you like Linux?" yes; then
+if confirm "Do you like Linux?" yes; then
   echo "Tux is great!"
 else
   echo "Well, thats ok."
 fi
 
-# But maybe instead you want to record a literal "true" or "false" into a variable?:
-LIKES_LINUX=$(script-wizard confirm "Do you like Linux?" yes && echo "true" || echo "false")
+# But maybe you want to record a literal "true" or "false" into a variable?:
+LIKES_LINUX=$(confirm "Do you like Linux?" yes && echo "true" || echo "false")
 ```
 
-### select
+### choose
 
-Present a list of options to the user and have them select a single
+Present a list of options to the user and have them select a *single*
 response from the list:
 
 ```
-SELECTED=$(script-wizard select "Choose your character class" "Rogue" "Wizard" "Paladin" "Cleric" "Bard")
+# Set the alias to make it easier to use:
+alias choose='script-wizard select'
 
-# You can use an option from a bash array:
+SELECTED=$(choose "Select your character class" "Rogue" "Wizard" "Paladin" "Cleric" "Bard")
+
+# You can use an option from a bash array too:
 options=("red" "blue" "greenish orange" "purple")
-COLOR=$(script-wizard select "Choose a color" "${options[@]}")
+COLOR=$(choose "Choose a color" "${options[@]}")
 ```

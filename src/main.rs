@@ -22,8 +22,8 @@ enum Commands {
         /// Default answer yes/no
         default_answer: Option<ask::Confirmation>,
     },
-    /// Select from a list of choices
-    Select {
+    /// Choose from a list of choices
+    Choose {
         /// Selection prompt
         question: String,
         /// Available choices
@@ -45,10 +45,10 @@ fn program() -> Result<(), u8> {
             true => Ok(()),
             false => Err(1),
         },
-        Some(Commands::Select { question, options }) => {
+        Some(Commands::Choose { question, options }) => {
             println!(
                 "{}",
-                ask::select(question, options.iter().map(String::as_str).collect())
+                ask::choose(question, options.iter().map(String::as_str).collect())
             );
             Ok(())
         }
