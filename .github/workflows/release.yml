@@ -13,6 +13,21 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.ref == 'refs/heads/master' }}
+      - name: Get version from cargo.toml
+        uses: SebRollen/toml-action@v1.0.0
+        id: cargo_version
+        with:
+          file: 'Cargo.toml'
+          field: 'package.version'
+      - name: Get the tag of current release
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/v}
+      - name: Verify package version is equal to tag version
+        if: ${{ steps.cargo_version.outputs.value != steps.get_version.outputs.VERSION }}
+        run: |
+          echo "${{ steps.cargo_version.outputs.value }}"
+          echo "${{ steps.get_version.outputs.VERSION }}"
+          exit 1
       - name: Build binary
         uses: houseabsolute/actions-rust-cross@v0
         with:
