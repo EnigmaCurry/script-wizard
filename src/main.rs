@@ -15,6 +15,8 @@ enum Commands {
         /// The question to ask
         question: String,
         default: Option<String>,
+        #[arg(short, long)]
+        json: bool,
     },
     /// Ask an interactive yes/no question
     Confirm {
@@ -32,6 +34,8 @@ enum Commands {
         /// Default answer
         #[arg(short, long, value_name = "ITEM")]
         default: Option<String>,
+        #[arg(short, long)]
+        json: bool,
     },
     /// Select multiple items from a list of choices
     Select {
@@ -42,6 +46,8 @@ enum Commands {
         /// Default answer
         #[arg(short, long, value_name = "JSON_ARRAY")]
         default: Option<String>,
+        #[arg(short, long)]
+        json: bool,
     },
     /// Choose date
     Date {
@@ -60,17 +66,44 @@ enum Commands {
         week_start: Option<chrono::Weekday>,
         #[arg(long, value_name = "MESSAGE")]
         help_message: Option<String>,
+        #[arg(short, long)]
+        json: bool,
+    },
+    /// Full text editor box
+    Editor {
+        /// The question to ask
+        message: String,
+        #[arg(long, value_name = "TEXT")]
+        default: Option<String>,
+        #[arg(long, value_name = "MESSAGE")]
+        help_message: Option<String>,
+        #[arg(long, value_name = "EXTENSION")]
+        file_extension: Option<String>,
+        #[arg(short, long)]
+        json: bool,
     },
 }
 
 fn program() -> Result<(), u8> {
     let cli = Cli::parse();
     match &cli.command {
-        Some(Commands::Ask { question, default }) => {
-            ask::ask!(
+        Some(Commands::Ask {
+            question,
+            default,
+            json,
+        }) => {
+            let response = ask::ask!(
                 question,
                 default.clone().unwrap_or(String::from("")).as_str()
             );
+            if *json {
+                println!(
+                    "{}",
+                    serde_json::to_string(&response).unwrap_or("".to_string())
+                )
+            } else {
+                println!("{}", response);
+            }
             Ok(())
         }
         Some(Commands::Confirm { question, default }) => {
@@ -83,31 +116,44 @@ fn program() -> Result<(), u8> {
             question,
             options,
             default,
+            json,
         }) => {
-            println!(
-                "{}",
-                ask::choose(
-                    question,
-                    default.clone().unwrap_or(String::from("")).as_str(),
-                    options.iter().map(String::as_str).collect()
-                )
+            let choice = ask::choose(
+                question,
+                default.clone().unwrap_or(String::from("")).as_str(),
+                options.iter().map(String::as_str).collect(),
             );
+            if *json {
+                println!(
+                    "{}",
+                    serde_json::to_string(&choice).unwrap_or("".to_string())
+                )
+            } else {
+                println!("{}", choice);
+            }
             Ok(())
         }
         Some(Commands::Select {
             question,
             options,
             default,
+            json,
         }) => {
             let selections = ask::select(
                 question,
                 default.clone().unwrap_or("".to_string()).as_str(),
                 options.iter().map(String::as_str).collect(),
             );
-            println!(
-                "{}",
-                serde_json::to_string(&selections).unwrap_or("[]".to_string())
-            );
+            if *json {
+                println!(
+                    "{}",
+                    serde_json::to_string(&selections).unwrap_or("".to_string())
+                )
+            } else {
+                for t in selections {
+                    println!("{}", t);
+                }
+            }
             Ok(())
         }
         Some(Commands::Date {
@@ -118,6 +164,7 @@ fn program() -> Result<(), u8> {
             week_start,
             help_message,
             format,
+            json,
         }) => {
             let date = ask::date(
                 question,
@@ -128,7 +175,31 @@ fn program() -> Result<(), u8> {
                 help_message.clone().unwrap_or("".to_string()).as_str(),
                 format.clone().unwrap_or("".to_string()).as_str(),
             );
-            println!("{}", date);
+            if *json {
+                println!("{}", serde_json::to_string(&date).unwrap_or("".to_string()))
+            } else {
+                println!("{}", date);
+            }
+            Ok(())
+        }
+        Some(Commands::Editor {
+            message,
+            default,
+            help_message,
+            file_extension,
+            json,
+        }) => {
+            let text = ask::editor(
+                message,
+                default.clone().unwrap_or("".to_string()).as_str(),
+                help_message.clone().unwrap_or("".to_string()).as_str(),
+                file_extension.clone().unwrap_or("".to_string()).as_str(),
+            );
+            if *json {
+                println!("{}", serde_json::to_string(&text).unwrap())
+            } else {
+                println!("{}", text);
+            }
             Ok(())
         }
         None => Err(1),

@@ -1,6 +1,6 @@
 use chrono::{NaiveDate, Weekday};
 use clap::ValueEnum;
-use inquire::{Confirm, DateSelect, InquireError, MultiSelect, Select, Text};
+use inquire::{Confirm, DateSelect, Editor, InquireError, MultiSelect, Select, Text};
 
 #[derive(Clone, ValueEnum)]
 pub enum Confirmation {
@@ -8,21 +8,18 @@ pub enum Confirmation {
     No,
 }
 
-pub fn ask_prompt(question: &str, default: &str, allow_blank: bool) {
+pub fn ask_prompt(question: &str, default: &str, allow_blank: bool) -> String {
     if question == "" {
         panic!("Blank question")
     }
     match allow_blank {
-        true => println!(
-            "{}",
-            Text::new(question).with_default(default).prompt().unwrap()
-        ),
+        true => Text::new(question).with_default(default).prompt().unwrap(),
         false => {
             let mut a = String::from("");
             while a == "" {
                 a = Text::new(question).with_default(default).prompt().unwrap();
             }
-            println!("{}", a)
+            a
         }
     }
 }
@@ -104,4 +101,14 @@ pub fn date(
         .prompt()
         .unwrap();
     return date.format(date_format).to_string();
+}
+
+pub fn editor(message: &str, default: &str, help_message: &str, file_extension: &str) -> String {
+    let text = Editor::new(message)
+        .with_predefined_text(default)
+        .with_help_message(help_message)
+        .with_file_extension(file_extension)
+        .prompt()
+        .unwrap();
+    return text;
 }
