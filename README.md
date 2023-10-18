@@ -120,3 +120,11 @@ Present a date picker to the user:
 # Pick a date between 2023/10/01 and 2023/10/20:
 DATE=$(script-wizard date "Enter a date" --week-start monday --format "%Y-%m-%d" --min-date "2023-10-01" --max-date "2023-10-20" --help-message "yadda yadda")
 ```
+
+## Common options
+
+ * `--json` - the default is to print raw text even if it spans
+   multiple lines. If you specify `--json` it will print it as compact
+   JSON on a single line, splitting lines into lists of strings, or as
+   a quoted string if its just supposed to be one line, depending on
+   the subcommand.
