@@ -121,6 +121,24 @@ Present a date picker to the user:
 DATE=$(script-wizard date "Enter a date" --week-start monday --format "%Y-%m-%d" --min-date "2023-10-01" --max-date "2023-10-20" --help-message "yadda yadda")
 ```
 
+### editor
+
+Present a full text editor entry to the user:
+
+```
+BIOGRAPHPY=$(script-wizard editor "Tell me alllll about yourself" --default "# Describe yourself" --json | sed 's/^[^\"]*//')
+```
+
+Watch out: There is a potential bug here if your editor prints
+anything to stdout. (In the case of emacsclient, it undesirably
+captures the text "Waiting for Emacs...".) Using `--json` will wrap
+the correct editor text in double quotes, and pipeing the output
+through `sed 's/^[^\"]*//'` will remove the text before the first
+double quote.)
+
+Set the common `EDITOR` environment variable to choose the editor it
+launches.
+
 ## Common options
 
  * `--json` - the default is to print raw text even if it spans
