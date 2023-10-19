@@ -106,6 +106,7 @@ jobs:
 
   release:
     name: Release - ${{ matrix.platform.release_for }}
+    needs: build
     runs-on: ubuntu-latest
     steps:
     - uses: actions/download-artifact@v3
