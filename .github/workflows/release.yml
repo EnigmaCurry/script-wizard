@@ -17,7 +17,7 @@ jobs:
         with:
           save-if: ${{ github.ref == 'refs/heads/master' }}
       - name: Get version from cargo.toml
-        uses: SebRollen/toml-action@v1
+        uses: SebRollen/toml-action@v1.0.1
         id: cargo_version
         with:
           file: 'Cargo.toml'
