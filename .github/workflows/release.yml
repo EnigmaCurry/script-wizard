@@ -105,6 +105,9 @@ jobs:
             # more release targets here ...
 
   release:
+    name: Release - ${{ matrix.platform.release_for }}
+    runs-on: ubuntu-latest
+    steps:
     - uses: actions/download-artifact@v3
       with:
         name: script-wizard-Linux-x86_64.tar.gz
