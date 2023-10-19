@@ -13,7 +13,21 @@ pub fn ask_prompt(question: &str, default: &str, allow_blank: bool) -> String {
         panic!("Blank question")
     }
     match allow_blank {
-        true => Text::new(question).with_default(default).prompt().unwrap(),
+        true => {
+            let r: Result<String, InquireError>;
+            match default {
+                "" => {
+                    r = Text::new(question).prompt();
+                }
+                _ => {
+                    r = Text::new(question).with_default(default).prompt();
+                }
+            }
+            if r.is_err() {
+                std::process::exit(1);
+            }
+            r.unwrap()
+        }
         false => {
             let mut a = String::from("");
             while a == "" {

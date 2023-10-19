@@ -17,6 +17,8 @@ enum Commands {
         default: Option<String>,
         #[arg(short, long)]
         json: bool,
+        #[arg(long)]
+        allow_blank: bool,
     },
     /// Ask an interactive yes/no question
     Confirm {
@@ -91,10 +93,12 @@ fn program() -> Result<(), u8> {
             question,
             default,
             json,
+            allow_blank,
         }) => {
             let response = ask::ask!(
                 question,
-                default.clone().unwrap_or(String::from("")).as_str()
+                default.clone().unwrap_or(String::from("")).as_str(),
+                *allow_blank
             );
             if *json {
                 println!(
