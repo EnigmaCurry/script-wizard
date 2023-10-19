@@ -24,7 +24,7 @@ jobs:
           field: 'package.version'
       - name: Get the tag of current release
         id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/v}
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> ${GITHUB_OUTPUT}
       - name: Verify package version is equal to tag version
         if: ${{ steps.cargo_version.outputs.value != steps.get_version.outputs.VERSION }}
         run: |
