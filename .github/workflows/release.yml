@@ -1,12 +1,13 @@
 name: Release
 
 on:
-  release:
-    types: [created]
+  push:
+    tags:
+      - "v*.*.*"
 
 jobs:
-  release:
-    name: Release - ${{ matrix.platform.release_for }}
+  build:
+    name: Build - ${{ matrix.platform.release_for }}
     runs-on: ${{ matrix.platform.os }}
     steps:
       - name: Checkout
@@ -57,10 +58,11 @@ jobs:
           name: ${{ matrix.platform.name }}
           path: ${{ matrix.platform.name }}
         if: startsWith( github.ref, 'refs/tags/v' )
-      - name: Upload release assets
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release upload ${{ github.event.release.tag_name }} ${{ matrix.platform.name }} && gh release upload ${{ github.event.release.tag_name }} ${{ matrix.platform.name }}.sha256
+      - name: Publish release digests
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.platform.name }}.sha256
+          path: ${{ matrix.platform.name }}.sha266
         if: startsWith( github.ref, 'refs/tags/v' )
     strategy:
       matrix:
@@ -102,3 +104,25 @@ jobs:
 
             # more release targets here ...
 
+  release:
+    - uses: actions/download-artifact@v3
+      with:
+        name: script-wizard-Linux-x86_64.tar.gz
+    - uses: actions/download-artifact@v3
+      with:
+        name: script-wizard-Linux-x86_64.tar.gz.sha256
+    - uses: actions/download-artifact@v3
+      with:
+        name: script-wizard-Linux-aarch64.tar.gz
+    - uses: actions/download-artifact@v3
+      with:
+        name: script-wizard-Linux-aarch64.tar.gz.sha256
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          script-wizard-Linux-x86_64.tar.gz
+          script-wizard-Linux-x86_64.tar.gz.sha256
+          script-wizard-Linux-aarch64.tar.gz
+          script-wizard-Linux-aarch64.tar.gz.sha256
