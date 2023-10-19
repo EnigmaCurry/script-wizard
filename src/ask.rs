@@ -17,7 +17,19 @@ pub fn ask_prompt(question: &str, default: &str, allow_blank: bool) -> String {
         false => {
             let mut a = String::from("");
             while a == "" {
-                a = Text::new(question).with_default(default).prompt().unwrap();
+                let r: Result<String, InquireError>;
+                match default {
+                    "" => {
+                        r = Text::new(question).prompt();
+                    }
+                    _ => {
+                        r = Text::new(question).with_default(default).prompt();
+                    }
+                }
+                if r.is_err() {
+                    std::process::exit(1);
+                }
+                a = r.unwrap();
             }
             a
         }
@@ -47,7 +59,7 @@ pub fn confirm(question: &str, default_answer: Option<Confirmation>) -> bool {
     match c.prompt() {
         Ok(true) => true,
         Ok(false) => false,
-        Err(_) => panic!("Error with confirm"),
+        Err(_) => false,
     }
 }
 
@@ -58,7 +70,7 @@ pub fn choose(question: &str, default: &str, options: Vec<&str>) -> String {
         .prompt();
     match ans {
         Ok(selection) => String::from(selection),
-        Err(_) => panic!("Cancelled selection"),
+        Err(_) => std::process::exit(1),
     }
 }
 
@@ -76,7 +88,7 @@ pub fn select(question: &str, default: &str, options: Vec<&str>) -> Vec<String> 
         .prompt();
     match ans {
         Ok(selection) => selection.iter().map(|&x| x.into()).collect(),
-        Err(_) => panic!("Cancelled selection"),
+        Err(_) => std::process::exit(1),
     }
 }
 
