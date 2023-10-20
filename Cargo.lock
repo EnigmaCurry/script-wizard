@@ -258,7 +258,7 @@ dependencies = [
 [[package]]
 name = "inquire"
 version = "0.6.2"
-source = "git+https://github.com/EnigmaCurry/inquire.git?branch=script-wizard#a21b1260f44213a370f4193c70d7323c6650cfbc"
+source = "git+https://github.com/EnigmaCurry/inquire.git?branch=script-wizard#14b19107bad783622c3a93ee5bc8cafe1e4a3c4a"
 dependencies = [
  "bitflags 2.4.1",
  "chrono",
@@ -437,7 +437,7 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "script-wizard"
-version = "0.1.18"
+version = "0.1.19"
 dependencies = [
  "chrono",
  "clap",
