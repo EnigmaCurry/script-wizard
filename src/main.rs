@@ -17,8 +17,17 @@ enum Commands {
         default: Option<String>,
         #[arg(short, long)]
         json: bool,
-        #[arg(long)]
+        #[arg(
+            long,
+            help = "Allow the user input to be blank, otherwise re-ask again"
+        )]
         allow_blank: bool,
+        #[arg(
+            long,
+            value_name = "JSON_ARRAY",
+            help = "JSON serialized array of autocompletion strings to allow"
+        )]
+        suggestions: Option<String>,
     },
     /// Ask an interactive yes/no question
     Confirm {
@@ -94,11 +103,13 @@ fn program() -> Result<(), u8> {
             default,
             json,
             allow_blank,
+            suggestions,
         }) => {
             let response = ask::ask!(
                 question,
                 default.clone().unwrap_or(String::from("")).as_str(),
-                *allow_blank
+                *allow_blank,
+                suggestions.clone().unwrap_or("".to_string()).as_str()
             );
             if *json {
                 println!(

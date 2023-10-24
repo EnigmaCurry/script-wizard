@@ -1,6 +1,9 @@
 use chrono::{NaiveDate, Weekday};
 use clap::ValueEnum;
-use inquire::{Confirm, DateSelect, Editor, InquireError, MultiSelect, Select, Text};
+use inquire::{
+    autocompletion::Replacement, error::CustomUserError, Confirm, DateSelect, Editor, InquireError,
+    MultiSelect, Select, Text,
+};
 
 #[derive(Clone, ValueEnum)]
 pub enum Confirmation {
@@ -8,19 +11,93 @@ pub enum Confirmation {
     No,
 }
 
-pub fn ask_prompt(question: &str, default: &str, allow_blank: bool) -> String {
+fn read_json_array(json: &str) -> Result<Vec<String>, CustomUserError> {
+    let a: Vec<String> = serde_json::from_str(json).expect("invalid json array");
+    Ok(a)
+}
+
+#[derive(Clone, Default)]
+pub struct AskAutoCompleter {
+    input: String,
+    suggestions_json: String,
+    suggestions: Vec<String>,
+    suggestion_index: usize,
+}
+
+impl AskAutoCompleter {
+    fn update_input(&mut self, input: &str) -> Result<(), CustomUserError> {
+        if input == self.input {
+            // No change:
+            return Ok(());
+        }
+        self.input = input.to_string();
+        self.suggestion_index = 0;
+        Ok(())
+    }
+}
+
+impl inquire::Autocomplete for AskAutoCompleter {
+    fn get_suggestions(&mut self, input: &str) -> Result<Vec<String>, CustomUserError> {
+        self.update_input(input)?;
+        self.suggestions = read_json_array(&self.suggestions_json)
+            .expect("Couldn't parse suggestions")
+            .iter()
+            .filter(|s| s.to_lowercase().contains(&input.to_lowercase()))
+            .map(|s| String::from(s.clone()))
+            .collect();
+        Ok(self.suggestions.clone())
+    }
+
+    fn get_completion(
+        &mut self,
+        input: &str,
+        highlighted_suggestion: Option<String>,
+    ) -> Result<Replacement, CustomUserError> {
+        self.update_input(input)?;
+        match highlighted_suggestion {
+            Some(suggestion) => Ok(Replacement::Some(suggestion)),
+            None => {
+                if self.suggestions.len() > 0 {
+                    self.suggestion_index = (self.suggestion_index + 1) % self.suggestions.len();
+                    Ok(Replacement::Some(
+                        self.suggestions
+                            .get(self.suggestion_index)
+                            .unwrap()
+                            .to_string(),
+                    ))
+                } else {
+                    Ok(Replacement::None)
+                }
+            }
+        }
+    }
+}
+
+pub fn ask_prompt(
+    question: &str,
+    default: &str,
+    allow_blank: bool,
+    suggestions_json: &str,
+) -> String {
     if question == "" {
         panic!("Blank question")
     }
+    let mut auto_completer = AskAutoCompleter::default();
+    auto_completer.suggestions_json = suggestions_json.to_string();
     match allow_blank {
         true => {
             let r: Result<String, InquireError>;
             match default {
                 "" => {
-                    r = Text::new(question).prompt();
+                    r = Text::new(question)
+                        .with_autocomplete(auto_completer.clone())
+                        .prompt();
                 }
                 _ => {
-                    r = Text::new(question).with_default(default).prompt();
+                    r = Text::new(question)
+                        .with_autocomplete(auto_completer.clone())
+                        .with_default(default)
+                        .prompt();
                 }
             }
             if r.is_err() {
@@ -34,10 +111,15 @@ pub fn ask_prompt(question: &str, default: &str, allow_blank: bool) -> String {
                 let r: Result<String, InquireError>;
                 match default {
                     "" => {
-                        r = Text::new(question).prompt();
+                        r = Text::new(question)
+                            .with_autocomplete(auto_completer.clone())
+                            .prompt();
                     }
                     _ => {
-                        r = Text::new(question).with_default(default).prompt();
+                        r = Text::new(question)
+                            .with_default(default)
+                            .with_autocomplete(auto_completer.clone())
+                            .prompt();
                     }
                 }
                 if r.is_err() {
@@ -51,14 +133,17 @@ pub fn ask_prompt(question: &str, default: &str, allow_blank: bool) -> String {
 }
 
 macro_rules! ask {
+    ($question: expr, $default: expr, $allow_blank: expr, $suggestions_json: expr) => {
+        ask::ask_prompt($question, $default, $allow_blank, $suggestions_json)
+    };
     ($question: expr, $default: expr, $allow_blank: expr) => {
-        ask::ask_prompt($question, $default, $allow_blank)
+        ask::ask_prompt($question, $default, $allow_blank, "")
     };
     ($question: expr, $default: expr) => {
-        ask::ask_prompt($question, $default, false)
+        ask::ask_prompt($question, $default, false, "")
     };
     ($question: expr) => {
-        ask::ask_prompt($question, "", false)
+        ask::ask_prompt($question, "", false, "")
     };
 }
 pub(crate) use ask;
