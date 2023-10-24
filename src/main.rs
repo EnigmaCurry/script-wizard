@@ -25,7 +25,8 @@ enum Commands {
         #[arg(
             long,
             value_name = "JSON_ARRAY",
-            help = "JSON serialized array of autocompletion strings to allow"
+            help = "JSON serialized array of autocompletion strings to allow",
+            default_value = "[]"
         )]
         suggestions: Option<String>,
     },
