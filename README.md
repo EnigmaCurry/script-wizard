@@ -126,7 +126,7 @@ DATE=$(script-wizard date "Enter a date" --week-start monday --format "%Y-%m-%d"
 Present a full text editor entry to the user:
 
 ```
-BIOGRAPHPY=$(script-wizard editor "Tell me alllll about yourself" --default "# Describe yourself" --json | sed 's/^[^\"]*//')
+BIOGRAPHY=$(script-wizard editor "Tell me alllll about yourself" --default "# Describe yourself" --json | sed 's/^[^\"]*//')
 ```
 
 Watch out: There is a potential bug here if your editor prints

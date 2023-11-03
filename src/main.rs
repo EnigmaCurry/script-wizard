@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand};
 mod ask;
+mod example;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None, arg_required_else_help = true)]
@@ -76,6 +77,8 @@ enum Commands {
         min_date: Option<String>,
         #[arg(long, value_name = "DATE")]
         max_date: Option<String>,
+        #[arg(long, value_name = "DATE")]
+        starting_date: Option<String>,
         #[arg(default_value = "sunday", long, value_name = "WEEKDAY")]
         week_start: Option<chrono::Weekday>,
         #[arg(long, value_name = "MESSAGE")]
@@ -95,6 +98,10 @@ enum Commands {
         file_extension: Option<String>,
         #[arg(short, long)]
         json: bool,
+    },
+    Example {
+        /// The example to show
+        name: Option<String>,
     },
 }
 
@@ -181,6 +188,7 @@ fn program() -> Result<(), u8> {
             default,
             min_date,
             max_date,
+            starting_date,
             week_start,
             help_message,
             format,
@@ -191,6 +199,7 @@ fn program() -> Result<(), u8> {
                 default.clone().unwrap_or("".to_string()).as_str(),
                 min_date.clone().unwrap_or("".to_string()).as_str(),
                 max_date.clone().unwrap_or("".to_string()).as_str(),
+                starting_date.clone().unwrap_or("".to_string()).as_str(),
                 week_start.clone().unwrap_or(chrono::Weekday::Sun),
                 help_message.clone().unwrap_or("".to_string()).as_str(),
                 format.clone().unwrap_or("".to_string()).as_str(),
@@ -221,6 +230,19 @@ fn program() -> Result<(), u8> {
                 println!("{}", text);
             }
             Ok(())
+        }
+        Some(Commands::Example { name }) => {
+            let n = name.clone().unwrap_or("".to_string());
+            match example::example(&n) {
+                Ok(name) => {
+                    println!("{}", name);
+                    Ok(())
+                }
+                Err(e) => {
+                    eprintln!("{:?}", e);
+                    Err(1)
+                }
+            }
         }
         None => Err(1),
     }

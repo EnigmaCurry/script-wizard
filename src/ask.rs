@@ -202,6 +202,7 @@ pub fn date(
     default: &str,
     min_date: &str,
     max_date: &str,
+    starting_date: &str,
     week_start: Weekday,
     help_message: &str,
     date_format: &str,
@@ -213,6 +214,11 @@ pub fn date(
         )
         .with_min_date(NaiveDate::parse_from_str(min_date, date_format).unwrap_or(NaiveDate::MIN))
         .with_max_date(NaiveDate::parse_from_str(max_date, date_format).unwrap_or(NaiveDate::MAX))
+        .with_starting_date(
+            NaiveDate::parse_from_str(starting_date, date_format).unwrap_or(
+                NaiveDate::parse_from_str(min_date, date_format).unwrap_or(NaiveDate::MIN),
+            ),
+        )
         .with_week_start(week_start)
         .with_help_message(help_message)
         .prompt()
