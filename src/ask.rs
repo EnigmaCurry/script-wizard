@@ -162,13 +162,19 @@ pub fn confirm(question: &str, default_answer: Option<Confirmation>) -> bool {
     }
 }
 
-pub fn choose(question: &str, default: &str, options: Vec<&str>) -> String {
+pub fn choose(question: &str, default: &str, options: Vec<&str>, numeric: &bool) -> String {
     let default_index = options.iter().position(|&r| r == default).unwrap_or(0);
-    let ans: Result<&str, InquireError> = Select::new(question, options)
+    let ans: Result<&str, InquireError> = Select::new(question, options.clone())
         .with_starting_cursor(default_index)
         .prompt();
     match ans {
-        Ok(selection) => String::from(selection),
+        Ok(selection) => match numeric {
+            true => {
+                let index = options.iter().position(|&r| r == selection).unwrap();
+                format!("{}", index)
+            }
+            false => String::from(selection),
+        },
         Err(_) => std::process::exit(1),
     }
 }

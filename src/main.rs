@@ -48,6 +48,8 @@ enum Commands {
         default: Option<String>,
         #[arg(short, long)]
         json: bool,
+        #[arg(short, long, help = "return result as numeric value")]
+        numeric: bool,
     },
     /// Select multiple items from a list of choices
     Select {
@@ -133,11 +135,13 @@ fn program() -> Result<(), u8> {
             options,
             default,
             json,
+            numeric,
         }) => {
             let choice = ask::choose(
                 question,
                 default.clone().unwrap_or(String::from("")).as_str(),
                 options.iter().map(String::as_str).collect(),
+                numeric,
             );
             if *json {
                 println!(
