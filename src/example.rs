@@ -34,6 +34,8 @@ enum Example {
     DatePick,
     #[strum(props(Name = "Editor for free form text box converted to JSON"))]
     Editor,
+    #[strum(props(Name = "Menu of shell commands to execute"))]
+    Menu,
 }
 
 pub fn choose_example() -> Result<String, ExampleError> {
@@ -71,6 +73,7 @@ pub fn example(name: &str) -> Result<String, ExampleError> {
                 Example::SelectArray => Ok(run_bash(example_select_array())),
                 Example::DatePick => Ok(run_bash(example_date_pick())),
                 Example::Editor => Ok(run_bash(example_editor())),
+                Example::Menu => Ok(run_bash(example_menu())),
             },
             Err(_) => Err(ExampleError::ExampleNotFound {
                 name: name.to_string(),
@@ -172,5 +175,11 @@ BIOGRAPHY=$(script-wizard editor "Tell me alllll about yourself" --default "Desc
 
 echo "This is what you told me about yourself:"
 echo "${BIOGRAPHY}"
+"#
+}
+
+pub fn example_menu() -> &'static str {
+    r#"#!/bin/bash
+script-wizard menu --once "main menu" "print username = whoami"  "print all users = cat /etc/passwd | cut -d ':' -f 1"
 "#
 }

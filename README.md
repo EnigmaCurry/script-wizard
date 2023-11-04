@@ -139,6 +139,17 @@ double quote.)
 Set the common `EDITOR` environment variable to choose the editor it
 launches.
 
+### menu
+
+Present a menu of command entries that the user can select and
+execute. The entries must be specified in the format: `ENTRY =
+COMMAND` where `ENTRY` is the text line of the menu entry, and
+`COMMAND` is the shell command to run if the entry is selected:
+
+```
+script-wizard menu --once "main menu" "print username = whoami"  "print all users = cat /etc/passwd | cut -d ':' -f 1"
+```
+
 ## Common options
 
  * `--json` - the default is to print raw text even if it spans

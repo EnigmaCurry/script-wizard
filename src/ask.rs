@@ -1,3 +1,5 @@
+use std::process::Command;
+
 use chrono::{NaiveDate, Weekday};
 use clap::ValueEnum;
 use inquire::{
@@ -234,4 +236,34 @@ pub fn editor(message: &str, default: &str, help_message: &str, file_extension: 
         .prompt()
         .unwrap();
     return text;
+}
+
+pub fn menu(heading: &str, entries: &Vec<String>, default: &Option<String>) -> Result<usize, u8> {
+    let titles: Vec<&str> = entries
+        .iter()
+        .map(|e| e.split(" = ").collect::<Vec<&str>>()[0])
+        .collect();
+    let commands: Vec<&str> = entries
+        .iter()
+        .map(|e| e.split(" = ").collect::<Vec<&str>>()[1])
+        .collect();
+    let command_index = choose(
+        heading,
+        default.clone().unwrap_or(String::from("")).as_str(),
+        titles,
+        &true,
+    )
+    .parse::<usize>()
+    .unwrap_or(1);
+    // Run the command:
+    let cmd = commands[command_index];
+    let status = Command::new("/bin/bash")
+        .args(["-c", cmd])
+        .status()
+        .unwrap();
+
+    match status.code().unwrap_or(1) {
+        0 => Ok(0),
+        _ => Err(1),
+    }
 }

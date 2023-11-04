@@ -99,6 +99,21 @@ enum Commands {
         #[arg(short, long)]
         json: bool,
     },
+    /// Run external commands from a menu system
+    Menu {
+        #[arg(value_name = "Menu Heading")]
+        heading: String,
+        #[arg(value_name = "Entry = command")]
+        /// List of entries and commands split with " = "
+        entries: Vec<String>,
+        #[arg(short, long, value_name = "ENTRY")]
+        /// Default answer
+        default: Option<String>,
+        #[arg(long)]
+        /// Quit after the first command is selected+executed
+        once: bool,
+    },
+    /// Show example Bash scripts that use script-wizard
     Example {
         /// The example to show
         name: Option<String>,
@@ -244,6 +259,23 @@ fn program() -> Result<(), u8> {
                 }
             }
         }
+        Some(Commands::Menu {
+            heading,
+            entries,
+            default,
+            once,
+        }) => loop {
+            match ask::menu(heading, entries, default) {
+                Ok(_) => {
+                    if *once {
+                        return Ok(());
+                    }
+                }
+                Err(_e) => {
+                    return Err(1);
+                }
+            }
+        },
         None => Err(1),
     }
 }
