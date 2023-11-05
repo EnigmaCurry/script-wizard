@@ -120,7 +120,7 @@ enum Commands {
     },
 }
 
-fn program() -> Result<(), u8> {
+fn program() -> Result<u8, u8> {
     let cli = Cli::parse();
     match &cli.command {
         Some(Commands::Ask {
@@ -144,11 +144,11 @@ fn program() -> Result<(), u8> {
             } else {
                 println!("{}", response);
             }
-            Ok(())
+            Ok(0)
         }
         Some(Commands::Confirm { question, default }) => {
             match ask::confirm(question, default.clone()) {
-                true => Ok(()),
+                true => Ok(0),
                 false => Err(1),
             }
         }
@@ -173,7 +173,7 @@ fn program() -> Result<(), u8> {
             } else {
                 println!("{}", choice);
             }
-            Ok(())
+            Ok(0)
         }
         Some(Commands::Select {
             question,
@@ -196,7 +196,7 @@ fn program() -> Result<(), u8> {
                     println!("{}", t);
                 }
             }
-            Ok(())
+            Ok(0)
         }
         Some(Commands::Date {
             question,
@@ -224,7 +224,7 @@ fn program() -> Result<(), u8> {
             } else {
                 println!("{}", date);
             }
-            Ok(())
+            Ok(0)
         }
         Some(Commands::Editor {
             message,
@@ -244,14 +244,14 @@ fn program() -> Result<(), u8> {
             } else {
                 println!("{}", text);
             }
-            Ok(())
+            Ok(0)
         }
         Some(Commands::Example { name }) => {
             let n = name.clone().unwrap_or("".to_string());
             match example::example(&n) {
                 Ok(name) => {
                     println!("{}", name);
-                    Ok(())
+                    Ok(0)
                 }
                 Err(e) => {
                     eprintln!("{:?}", e);
@@ -264,17 +264,9 @@ fn program() -> Result<(), u8> {
             entries,
             default,
             once,
-        }) => loop {
-            match ask::menu(heading, entries, default) {
-                Ok(_) => {
-                    if *once {
-                        return Ok(());
-                    }
-                }
-                Err(_e) => {
-                    return Err(1);
-                }
-            }
+        }) => match ask::menu(heading, entries, default, once) {
+            Ok(_) => Ok(0),
+            Err(_) => Err(1),
         },
         None => Err(1),
     }
@@ -282,7 +274,7 @@ fn program() -> Result<(), u8> {
 
 fn main() {
     match program() {
-        Ok(()) => std::process::exit(0),
+        Ok(_) => std::process::exit(0),
         Err(_) => std::process::exit(1),
     };
 }

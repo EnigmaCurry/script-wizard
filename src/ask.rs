@@ -165,7 +165,15 @@ pub fn confirm(question: &str, default_answer: Option<Confirmation>) -> bool {
 }
 
 pub fn choose(question: &str, default: &str, options: Vec<&str>, numeric: &bool) -> String {
-    let default_index = options.iter().position(|&r| r == default).unwrap_or(0);
+    let default_index: usize;
+    match default.trim().parse::<usize>() {
+        Ok(n) => {
+            default_index = n;
+        }
+        Err(_) => {
+            default_index = options.iter().position(|&r| r == default).unwrap_or(0);
+        }
+    }
     let ans: Result<&str, InquireError> = Select::new(question, options.clone())
         .with_starting_cursor(default_index)
         .prompt();
@@ -238,32 +246,50 @@ pub fn editor(message: &str, default: &str, help_message: &str, file_extension: 
     return text;
 }
 
-pub fn menu(heading: &str, entries: &Vec<String>, default: &Option<String>) -> Result<usize, u8> {
-    let titles: Vec<&str> = entries
-        .iter()
-        .map(|e| e.split(" = ").collect::<Vec<&str>>()[0])
-        .collect();
-    let commands: Vec<&str> = entries
-        .iter()
-        .map(|e| e.split(" = ").collect::<Vec<&str>>()[1])
-        .collect();
-    let command_index = choose(
-        heading,
-        default.clone().unwrap_or(String::from("")).as_str(),
-        titles,
-        &true,
-    )
-    .parse::<usize>()
-    .unwrap_or(1);
-    // Run the command:
-    let cmd = commands[command_index];
-    let status = Command::new("/bin/bash")
-        .args(["-c", cmd])
-        .status()
-        .unwrap();
+pub fn menu(
+    heading: &str,
+    entries: &Vec<String>,
+    default: &Option<String>,
+    once: &bool,
+) -> Result<usize, u8> {
+    let mut new_default: String = default.clone().unwrap_or("".to_string());
+    loop {
+        eprintln!("");
+        let titles: Vec<&str> = entries
+            .iter()
+            .map(|e| e.split(" = ").collect::<Vec<&str>>()[0])
+            .collect();
+        let commands: Vec<&str> = entries
+            .iter()
+            .map(|e| e.split(" = ").collect::<Vec<&str>>()[1])
+            .collect();
+        let command_index = choose(heading, new_default.as_str(), titles, &true)
+            .parse::<usize>()
+            .unwrap_or(1);
 
-    match status.code().unwrap_or(1) {
-        0 => Ok(0),
-        _ => Err(1),
+        new_default = command_index.to_string();
+
+        // Run the command:
+        let cmd = commands[command_index];
+        let status = Command::new("/bin/bash")
+            .args(["-c", cmd])
+            .status()
+            .unwrap();
+
+        match status.code().unwrap_or(1) {
+            0 => {
+                //Keep looping unless --once is given:
+                if *once {
+                    return Ok(0);
+                }
+            }
+            2 => {
+                // Ok(2) signals to quit the loop:
+                return Ok(2);
+            }
+            _ => {
+                return Err(1);
+            }
+        }
     }
 }

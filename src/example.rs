@@ -180,6 +180,9 @@ echo "${BIOGRAPHY}"
 
 pub fn example_menu() -> &'static str {
     r#"#!/bin/bash
-script-wizard menu --once "main menu" "print username = whoami"  "print all users = cat /etc/passwd | cut -d ':' -f 1"
+script-wizard menu "main menu" \
+  "print username = whoami" \
+  "print all users = cat /etc/passwd | cut -d ':' -f 1" \
+  "exit = exit 2"
 "#
 }
