@@ -42,7 +42,7 @@ pub fn choose_example() -> Result<String, ExampleError> {
     let options: Vec<&str> = Example::iter()
         .map(|e| e.get_str("Name").unwrap())
         .collect();
-    let choice = ask::choose("Choose an example", "", options, &true).parse::<usize>();
+    let choice = ask::choose("Choose an example", "", options, &true, 1).parse::<usize>();
     match choice {
         Ok(i) => match Example::iter().nth(i) {
             Some(ex) => example(ex.to_string().as_str()),

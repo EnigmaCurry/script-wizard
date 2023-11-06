@@ -164,7 +164,13 @@ pub fn confirm(question: &str, default_answer: Option<Confirmation>) -> bool {
     }
 }
 
-pub fn choose(question: &str, default: &str, options: Vec<&str>, numeric: &bool) -> String {
+pub fn choose(
+    question: &str,
+    default: &str,
+    options: Vec<&str>,
+    numeric: &bool,
+    cancel_code: u8,
+) -> String {
     let default_index: usize;
     match default.trim().parse::<usize>() {
         Ok(n) => {
@@ -185,6 +191,7 @@ pub fn choose(question: &str, default: &str, options: Vec<&str>, numeric: &bool)
             }
             false => String::from(selection),
         },
+        Err(InquireError::OperationCanceled) => std::process::exit(cancel_code.into()),
         Err(_) => std::process::exit(1),
     }
 }
@@ -263,7 +270,7 @@ pub fn menu(
             .iter()
             .map(|e| e.split(" = ").collect::<Vec<&str>>()[1])
             .collect();
-        let command_index = choose(heading, new_default.as_str(), titles, &true)
+        let command_index = choose(heading, new_default.as_str(), titles, &true, 0)
             .parse::<usize>()
             .unwrap_or(1);
 

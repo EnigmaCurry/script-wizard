@@ -164,6 +164,7 @@ fn program() -> Result<u8, u8> {
                 default.clone().unwrap_or(String::from("")).as_str(),
                 options.iter().map(String::as_str).collect(),
                 numeric,
+                1,
             );
             if *json {
                 println!(
