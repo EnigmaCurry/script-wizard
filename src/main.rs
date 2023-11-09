@@ -37,6 +37,8 @@ enum Commands {
         question: String,
         /// Default answer yes/no
         default: Option<ask::Confirmation>,
+        #[arg(short, long, help = "when canceling, use this exit code instead of 1")]
+        cancel_code: Option<u8>,
     },
     /// Choose a single item from a list of choices
     Choose {
@@ -51,6 +53,8 @@ enum Commands {
         json: bool,
         #[arg(short, long, help = "return result as numeric value")]
         numeric: bool,
+        #[arg(short, long, help = "when canceling, use this exit code instead of 1")]
+        cancel_code: Option<u8>,
     },
     /// Select multiple items from a list of choices
     Select {
@@ -63,6 +67,8 @@ enum Commands {
         default: Option<String>,
         #[arg(short, long)]
         json: bool,
+        #[arg(short, long, help = "when canceling, use this exit code instead of 1")]
+        cancel_code: Option<u8>,
     },
     /// Choose date
     Date {
@@ -146,25 +152,28 @@ fn program() -> Result<u8, u8> {
             }
             Ok(0)
         }
-        Some(Commands::Confirm { question, default }) => {
-            match ask::confirm(question, default.clone()) {
-                true => Ok(0),
-                false => Err(1),
-            }
-        }
+        Some(Commands::Confirm {
+            question,
+            default,
+            cancel_code,
+        }) => match ask::confirm(question, default.clone(), cancel_code.unwrap_or(1)) {
+            true => Ok(0),
+            false => Err(1),
+        },
         Some(Commands::Choose {
             question,
             options,
             default,
             json,
             numeric,
+            cancel_code,
         }) => {
             let choice = ask::choose(
                 question,
                 default.clone().unwrap_or(String::from("")).as_str(),
                 options.iter().map(String::as_str).collect(),
                 numeric,
-                1,
+                cancel_code.unwrap_or(1),
             );
             if *json {
                 println!(
@@ -181,11 +190,13 @@ fn program() -> Result<u8, u8> {
             options,
             default,
             json,
+            cancel_code,
         }) => {
             let selections = ask::select(
                 question,
                 default.clone().unwrap_or("".to_string()).as_str(),
                 options.iter().map(String::as_str).collect(),
+                cancel_code.unwrap_or(1),
             );
             if *json {
                 println!(
@@ -276,6 +287,6 @@ fn program() -> Result<u8, u8> {
 fn main() {
     match program() {
         Ok(_) => std::process::exit(0),
-        Err(_) => std::process::exit(1),
+        Err(code) => std::process::exit(code.into()),
     };
 }

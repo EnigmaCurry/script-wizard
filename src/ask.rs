@@ -150,7 +150,7 @@ macro_rules! ask {
 }
 pub(crate) use ask;
 
-pub fn confirm(question: &str, default_answer: Option<Confirmation>) -> bool {
+pub fn confirm(question: &str, default_answer: Option<Confirmation>, cancel_code: u8) -> bool {
     let mut c = Confirm::new(question);
     match default_answer {
         Some(Confirmation::Yes) => c = c.with_default(true),
@@ -160,7 +160,7 @@ pub fn confirm(question: &str, default_answer: Option<Confirmation>) -> bool {
     match c.prompt() {
         Ok(true) => true,
         Ok(false) => false,
-        Err(_) => false,
+        Err(_) => std::process::exit(cancel_code.into()),
     }
 }
 
@@ -191,12 +191,11 @@ pub fn choose(
             }
             false => String::from(selection),
         },
-        Err(InquireError::OperationCanceled) => std::process::exit(cancel_code.into()),
-        Err(_) => std::process::exit(1),
+        Err(_) => std::process::exit(cancel_code.into()),
     }
 }
 
-pub fn select(question: &str, default: &str, options: Vec<&str>) -> Vec<String> {
+pub fn select(question: &str, default: &str, options: Vec<&str>, cancel_code: u8) -> Vec<String> {
     let defaults: Vec<&str> = serde_json::from_str(default).unwrap_or(vec![]);
     let mut default_indices = vec![];
     for (index, item) in options.iter().enumerate() {
@@ -210,7 +209,7 @@ pub fn select(question: &str, default: &str, options: Vec<&str>) -> Vec<String> 
         .prompt();
     match ans {
         Ok(selection) => selection.iter().map(|&x| x.into()).collect(),
-        Err(_) => std::process::exit(1),
+        Err(_) => std::process::exit(cancel_code.into()),
     }
 }
 
