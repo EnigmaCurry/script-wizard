@@ -134,6 +134,7 @@ pub fn ask_prompt(
     }
 }
 
+#[macro_export]
 macro_rules! ask {
     ($question: expr, $default: expr, $allow_blank: expr, $suggestions_json: expr) => {
         ask::ask_prompt($question, $default, $allow_blank, $suggestions_json)
@@ -148,7 +149,7 @@ macro_rules! ask {
         ask::ask_prompt($question, "", false, "")
     };
 }
-pub(crate) use ask;
+pub use ask;
 
 pub fn confirm(question: &str, default_answer: Option<Confirmation>, cancel_code: u8) -> bool {
     let mut c = Confirm::new(question);
