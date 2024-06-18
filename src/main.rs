@@ -280,6 +280,7 @@ fn program() -> Result<u8, u8> {
             once,
             cancel_code
         }) => match ask::menu(heading, entries, default, once, cancel_code.unwrap_or(0)) {
+            Ok(2) => Err(2),
             Ok(_) => Ok(0),
             Err(_) => Err(1),
         },
