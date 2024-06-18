@@ -1,7 +1,13 @@
 [package]
 name = "script-wizard"
-version = "0.1.31"
+version = "0.1.32"
 edition = "2021"
+authors = ["EnigmaCurry"]
+documentation = "https://docs.rs/script-wizard"
+repository = "https://github.com/EnigmaCurry/script-wizard"
+license = "MIT"
+keywords = ["bash", "shell-script"]
+categories = ["command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
