@@ -258,6 +258,7 @@ pub fn menu(
     entries: &Vec<String>,
     default: &Option<String>,
     once: &bool,
+    cancel_code: u8,
 ) -> Result<usize, u8> {
     let mut new_default: String = default.clone().unwrap_or("".to_string());
     loop {
@@ -270,7 +271,7 @@ pub fn menu(
             .iter()
             .map(|e| e.split(" = ").collect::<Vec<&str>>()[1])
             .collect();
-        let command_index = choose(heading, new_default.as_str(), titles, &true, 0)
+        let command_index = choose(heading, new_default.as_str(), titles, &true, cancel_code)
             .parse::<usize>()
             .unwrap_or(1);
 

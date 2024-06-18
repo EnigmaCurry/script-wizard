@@ -118,6 +118,8 @@ enum Commands {
         #[arg(long)]
         /// Quit after the first command is selected+executed
         once: bool,
+        #[arg(short, long, help = "when canceling, use this exit code instead of 0")]
+        cancel_code: Option<u8>,
     },
     /// Show example Bash scripts that use script-wizard
     Example {
@@ -276,7 +278,8 @@ fn program() -> Result<u8, u8> {
             entries,
             default,
             once,
-        }) => match ask::menu(heading, entries, default, once) {
+            cancel_code
+        }) => match ask::menu(heading, entries, default, once, cancel_code.unwrap_or(0)) {
             Ok(_) => Ok(0),
             Err(_) => Err(1),
         },
