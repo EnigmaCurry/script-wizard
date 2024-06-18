@@ -12,10 +12,10 @@ categories = ["command-line-utilities"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-chrono = "0.4.31"
+chrono = "0.4.38"
 clap = { version = "4.3.23", features = ["derive", "env"] }
 custom_error = "1.9.2"
-inquire = { git="https://github.com/EnigmaCurry/inquire.git", branch="script-wizard", features = ["date", "editor"]}
-serde_json = "1.0.107"
-strum = { version = "0.25.0", features = ["derive", "strum_macros"] }
-strum_macros = "0.25.3"
+inquire = { version = "0.7.5", features = ["date", "editor"]}
+serde_json = "1.0.117"
+strum = { version = "0.26.2", features = ["derive", "strum_macros"] }
+strum_macros = "0.26.4"

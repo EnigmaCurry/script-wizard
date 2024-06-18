@@ -183,6 +183,7 @@ pub fn choose(
     }
     let ans: Result<&str, InquireError> = Select::new(question, options.clone())
         .with_starting_cursor(default_index)
+        .with_help_message("↑↓ to move, enter to select, type to filter, ESC to cancel")
         .prompt();
     match ans {
         Ok(selection) => match numeric {
@@ -207,6 +208,7 @@ pub fn select(question: &str, default: &str, options: Vec<&str>, cancel_code: u8
     }
     let ans = MultiSelect::new(question, options)
         .with_default(&default_indices)
+        .with_help_message("↑↓ to move, space to select one, → to all, ← to none, type to filter, ESC to cancel")
         .prompt();
     match ans {
         Ok(selection) => selection.iter().map(|&x| x.into()).collect(),
