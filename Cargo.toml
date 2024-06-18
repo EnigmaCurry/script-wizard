@@ -1,6 +1,6 @@
 [package]
 name = "script-wizard"
-version = "0.1.32"
+version = "0.1.33"
 edition = "2021"
 authors = ["EnigmaCurry"]
 documentation = "https://docs.rs/script-wizard"
