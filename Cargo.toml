@@ -8,6 +8,7 @@ repository = "https://github.com/EnigmaCurry/script-wizard"
 license = "MIT"
 keywords = ["bash", "shell-script"]
 categories = ["command-line-utilities"]
+description = "script-wizard is a shell script (Bash) helper program, to delegate the responsibility of asking questions to the user, asking for confirmation, making selections, etc. The normalized response is printed to stdout for the script to consume."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
