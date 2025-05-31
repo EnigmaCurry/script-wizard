@@ -27,6 +27,11 @@
 //! sudo install script-wizard /usr/local/bin/script-wizard
 //! ```
 //!
+//! Or, install with this curlbomb:
+//! ```bash
+//! bash <(curl https://raw.githubusercontent.com/EnigmaCurry/script-wizard/refs/heads/master/install.sh) ~/.local/bin
+//! ```
+//!
 //! ## Examples in Bash
 //! 
 //! ### ask
