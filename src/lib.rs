@@ -133,6 +133,15 @@
 //! script-wizard menu --once "main menu" "print username = whoami"  "print all users = cat /etc/passwd | cut -d ':' -f 1"
 //! ```
 //!
+//! ## Babashka wrapper
+//!
+//! A [Babashka](https://github.com/babashka/babashka) wrapper is
+//! available in the [`babashka/`](https://github.com/EnigmaCurry/script-wizard/tree/master/babashka)
+//! directory. It provides a native Clojure API for all script-wizard
+//! commands (`ask`, `confirm`, `choose`, `select`, `date`, `editor`,
+//! and `menu`). See the [babashka README](https://github.com/EnigmaCurry/script-wizard/tree/master/babashka#readme)
+//! for usage details.
+//!
 //! ## Common options
 //! 
 //!  * `--json` - the default is to print raw text even if it spans
