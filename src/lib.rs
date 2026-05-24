@@ -133,14 +133,22 @@
 //! script-wizard menu --once "main menu" "print username = whoami"  "print all users = cat /etc/passwd | cut -d ':' -f 1"
 //! ```
 //!
-//! ## Babashka wrapper
+//! ## Babashka pod
 //!
-//! A [Babashka](https://github.com/babashka/babashka) wrapper is
-//! available in the [`babashka/`](https://github.com/EnigmaCurry/script-wizard/tree/master/babashka)
-//! directory. It provides a native Clojure API for all script-wizard
-//! commands (`ask`, `confirm`, `choose`, `select`, `date`, `editor`,
-//! and `menu`). See the [babashka README](https://github.com/EnigmaCurry/script-wizard/tree/master/babashka#readme)
-//! for usage details.
+//! script-wizard can run as a [Babashka](https://github.com/babashka/babashka)
+//! [pod](https://github.com/babashka/pods), providing a native Clojure API
+//! for all commands (`ask`, `confirm`, `choose`, `select`, `date`, `editor`,
+//! and `menu`):
+//!
+//! ```clojure
+//! (require '[babashka.pods :as pods])
+//! (pods/load-pod ["script-wizard" "pod"])
+//! (require '[pod.enigmacurry.script-wizard :as sw])
+//!
+//! (sw/ask "What is your name?" :default "World")
+//! (sw/confirm "Continue?" :default :yes)
+//! (sw/choose "Pick one" ["a" "b" "c"])
+//! ```
 //!
 //! ## Common options
 //! 

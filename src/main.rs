@@ -1,6 +1,7 @@
 use clap::{Parser, Subcommand};
 mod ask;
 mod example;
+mod pod;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None, arg_required_else_help = true)]
@@ -126,6 +127,8 @@ enum Commands {
         /// The example to show
         name: Option<String>,
     },
+    /// Run as a Babashka pod (speaks the pod protocol on stdin/stdout)
+    Pod,
 }
 
 fn program() -> Result<u8, u8> {
@@ -284,6 +287,10 @@ fn program() -> Result<u8, u8> {
             Ok(_) => Ok(0),
             Err(_) => Err(1),
         },
+        Some(Commands::Pod) => {
+            pod::run_pod();
+            Ok(0)
+        }
         None => Err(1),
     }
 }

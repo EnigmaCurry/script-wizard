@@ -1,6 +1,6 @@
 [package]
 name = "script-wizard"
-version = "0.1.35"
+version = "0.1.36"
 edition = "2021"
 authors = ["EnigmaCurry"]
 documentation = "https://docs.rs/script-wizard"
@@ -13,6 +13,7 @@ description = "script-wizard is a shell script (Bash) helper program, to delegat
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+bendy = { version = "0.6.1", features = ["serde"] }
 chrono = "0.4.38"
 clap = { version = "4.3.23", features = ["derive", "env"] }
 custom_error = "1.9.2"

@@ -15,7 +15,7 @@
         packages = {
           default = pkgs.rustPlatform.buildRustPackage {
             pname = "script-wizard";
-            version = "0.1.34";
+            version = "0.1.36";
 
             src = ./.;
 

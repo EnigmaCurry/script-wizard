@@ -1,10 +1,12 @@
 #!/usr/bin/env bb
 
-(require '[babashka.classpath :refer [add-classpath]])
-(def script-dir (-> *file* io/file .getParentFile .getCanonicalPath))
-(add-classpath (str script-dir "/../src"))
+;; Full test of all script-wizard pod functions
 
-(require '[script-wizard :as wiz]
+(require '[babashka.pods :as pods])
+
+(pods/load-pod ["script-wizard" "pod"])
+
+(require '[pod.enigmacurry.script-wizard :as wiz]
          '[clojure.string :as str])
 
 ;; --- ask ---
@@ -79,3 +81,20 @@
 (println (str "Hobbies:   " (str/join ", " hobbies)))
 (println (str "Start:     " start-date))
 (println (str "Deadline:  " deadline))
+
+;; --- menu ---
+
+(defn network-menu []
+  (wiz/menu "Network"
+    [["Show IP address" #(println (:out (babashka.process/shell {:out :string} "hostname" "-I")))]
+     ["Show hostname" #(println (:out (babashka.process/shell {:out :string} "hostname")))]
+     ["Back" nil]]))
+
+(wiz/menu "Main Menu"
+  [["Greet" #(println (str "Hello, " name "!"))]
+   ["Write a note" #(let [note (wiz/editor "Write long-form notes using your preferred $EDITOR")]
+                      (println)
+                      (println "--- Your note ---")
+                      (println note))]
+   ["Network" network-menu]
+   ["Quit" nil]])
