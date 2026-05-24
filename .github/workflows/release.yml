@@ -133,7 +133,7 @@ jobs:
 
   publish-crate:
     name: Publish to crates.io
-    needs: build
+    needs: release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
