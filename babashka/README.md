@@ -64,13 +64,11 @@ From the `babashka/` directory:
    ["Quit"     nil]])
 ```
 
-## Running the examples
+## Examples
 
-```sh
-./examples/test.bb
-./examples/editor.bb
-./examples/menu.bb
-```
+- [test.bb](examples/test.bb) — all prompt types (ask, confirm, choose, select, date)
+- [editor.bb](examples/editor.bb) — full text editor input
+- [menu.bb](examples/menu.bb) — hierarchical menu with submenus
 
 ## Using the library in your own project
 
