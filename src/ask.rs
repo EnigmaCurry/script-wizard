@@ -226,22 +226,19 @@ pub fn date(
     help_message: &str,
     date_format: &str,
 ) -> String {
-    let date = DateSelect::new(question)
+    let mut picker = DateSelect::new(question)
         .with_starting_date(
             NaiveDate::parse_from_str(default, date_format)
                 .unwrap_or(chrono::Local::now().naive_local().into()),
         )
         .with_min_date(NaiveDate::parse_from_str(min_date, date_format).unwrap_or(NaiveDate::MIN))
         .with_max_date(NaiveDate::parse_from_str(max_date, date_format).unwrap_or(NaiveDate::MAX))
-        .with_starting_date(
-            NaiveDate::parse_from_str(starting_date, date_format).unwrap_or(
-                NaiveDate::parse_from_str(min_date, date_format).unwrap_or(NaiveDate::MIN),
-            ),
-        )
         .with_week_start(week_start)
-        .with_help_message(help_message)
-        .prompt()
-        .unwrap();
+        .with_help_message(help_message);
+    if let Ok(d) = NaiveDate::parse_from_str(starting_date, date_format) {
+        picker = picker.with_starting_date(d);
+    }
+    let date = picker.prompt().unwrap();
     return date.format(date_format).to_string();
 }
 
