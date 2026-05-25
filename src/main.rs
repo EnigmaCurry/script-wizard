@@ -31,6 +31,8 @@ enum Commands {
             default_value = "[]"
         )]
         suggestions: Option<String>,
+        #[arg(short, long, help = "when canceling, use this exit code instead of 1")]
+        cancel_code: Option<u8>,
     },
     /// Ask an interactive yes/no question
     Confirm {
@@ -92,6 +94,8 @@ enum Commands {
         help_message: Option<String>,
         #[arg(short, long)]
         json: bool,
+        #[arg(short, long, help = "when canceling, use this exit code instead of 1")]
+        cancel_code: Option<u8>,
     },
     /// Full text editor box
     Editor {
@@ -105,6 +109,8 @@ enum Commands {
         file_extension: Option<String>,
         #[arg(short, long)]
         json: bool,
+        #[arg(short, long, help = "when canceling, use this exit code instead of 1")]
+        cancel_code: Option<u8>,
     },
     /// Run external commands from a menu system
     Menu {
@@ -140,12 +146,14 @@ fn program() -> Result<u8, u8> {
             json,
             allow_blank,
             suggestions,
+            cancel_code,
         }) => {
             let response = ask::ask!(
                 question,
                 default.clone().unwrap_or(String::from("")).as_str(),
                 *allow_blank,
-                suggestions.clone().unwrap_or("".to_string()).as_str()
+                suggestions.clone().unwrap_or("".to_string()).as_str(),
+                cancel_code.unwrap_or(1)
             );
             if *json {
                 println!(
@@ -225,6 +233,7 @@ fn program() -> Result<u8, u8> {
             help_message,
             format,
             json,
+            cancel_code,
         }) => {
             let date = ask::date(
                 question,
@@ -235,6 +244,7 @@ fn program() -> Result<u8, u8> {
                 week_start.clone().unwrap_or(chrono::Weekday::Sun),
                 help_message.clone().unwrap_or("".to_string()).as_str(),
                 format.clone().unwrap_or("".to_string()).as_str(),
+                cancel_code.unwrap_or(1),
             );
             if *json {
                 println!("{}", serde_json::to_string(&date).unwrap_or("".to_string()))
@@ -249,12 +259,14 @@ fn program() -> Result<u8, u8> {
             help_message,
             file_extension,
             json,
+            cancel_code,
         }) => {
             let text = ask::editor(
                 message,
                 default.clone().unwrap_or("".to_string()).as_str(),
                 help_message.clone().unwrap_or("".to_string()).as_str(),
                 file_extension.clone().unwrap_or("".to_string()).as_str(),
+                cancel_code.unwrap_or(1),
             );
             if *json {
                 println!("{}", serde_json::to_string(&text).unwrap())

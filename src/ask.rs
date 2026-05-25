@@ -80,6 +80,7 @@ pub fn ask_prompt(
     default: &str,
     allow_blank: bool,
     suggestions_json: &str,
+    cancel_code: u8,
 ) -> String {
     if question == "" {
         panic!("Blank question")
@@ -103,7 +104,7 @@ pub fn ask_prompt(
                 }
             }
             if r.is_err() {
-                std::process::exit(1);
+                std::process::exit(cancel_code.into());
             }
             r.unwrap()
         }
@@ -125,7 +126,7 @@ pub fn ask_prompt(
                     }
                 }
                 if r.is_err() {
-                    std::process::exit(1);
+                    std::process::exit(cancel_code.into());
                 }
                 a = r.unwrap();
             }
@@ -136,17 +137,20 @@ pub fn ask_prompt(
 
 #[macro_export]
 macro_rules! ask {
+    ($question: expr, $default: expr, $allow_blank: expr, $suggestions_json: expr, $cancel_code: expr) => {
+        ask::ask_prompt($question, $default, $allow_blank, $suggestions_json, $cancel_code)
+    };
     ($question: expr, $default: expr, $allow_blank: expr, $suggestions_json: expr) => {
-        ask::ask_prompt($question, $default, $allow_blank, $suggestions_json)
+        ask::ask_prompt($question, $default, $allow_blank, $suggestions_json, 1)
     };
     ($question: expr, $default: expr, $allow_blank: expr) => {
-        ask::ask_prompt($question, $default, $allow_blank, "")
+        ask::ask_prompt($question, $default, $allow_blank, "", 1)
     };
     ($question: expr, $default: expr) => {
-        ask::ask_prompt($question, $default, false, "")
+        ask::ask_prompt($question, $default, false, "", 1)
     };
     ($question: expr) => {
-        ask::ask_prompt($question, "", false, "")
+        ask::ask_prompt($question, "", false, "", 1)
     };
 }
 pub use ask;
@@ -225,6 +229,7 @@ pub fn date(
     week_start: Weekday,
     help_message: &str,
     date_format: &str,
+    cancel_code: u8,
 ) -> String {
     let mut picker = DateSelect::new(question)
         .with_starting_date(
@@ -238,18 +243,22 @@ pub fn date(
     if let Ok(d) = NaiveDate::parse_from_str(starting_date, date_format) {
         picker = picker.with_starting_date(d);
     }
-    let date = picker.prompt().unwrap();
-    return date.format(date_format).to_string();
+    match picker.prompt() {
+        Ok(date) => date.format(date_format).to_string(),
+        Err(_) => std::process::exit(cancel_code.into()),
+    }
 }
 
-pub fn editor(message: &str, default: &str, help_message: &str, file_extension: &str) -> String {
-    let text = Editor::new(message)
+pub fn editor(message: &str, default: &str, help_message: &str, file_extension: &str, cancel_code: u8) -> String {
+    let ans = Editor::new(message)
         .with_predefined_text(default)
         .with_help_message(help_message)
         .with_file_extension(file_extension)
-        .prompt()
-        .unwrap();
-    return text;
+        .prompt();
+    match ans {
+        Ok(text) => text,
+        Err(_) => std::process::exit(cancel_code.into()),
+    }
 }
 
 pub fn menu(

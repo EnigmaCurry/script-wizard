@@ -145,7 +145,7 @@ fn write_describe_response(writer: &mut impl Write) {
             name: "ask",
             meta: "{:doc \"Ask a free-text question. Returns the response string.\n  Options: :default, :allow-blank, :suggestions\" :arglists ([question & {:keys [default allow-blank suggestions]}])}",
             code: Some(format!(
-                "(defn ask [question & {{:keys [default allow-blank suggestions]}}] ({ns_sym}/ask* question {{\"default\" default \"allow-blank\" allow-blank \"suggestions\" suggestions}}))"
+                "(defn ask [question & {{:keys [default allow-blank suggestions]}}] (try ({ns_sym}/ask* question {{\"default\" default \"allow-blank\" allow-blank \"suggestions\" suggestions}}) (catch Exception e (if (= \"canceled\" (ex-message e)) (System/exit 1) (throw e)))))"
             )),
         },
         VarDef {
@@ -157,7 +157,7 @@ fn write_describe_response(writer: &mut impl Write) {
             name: "confirm",
             meta: "{:doc \"Ask a yes/no question. Returns true or false.\n  Options: :default\" :arglists ([question & {:keys [default]}])}",
             code: Some(format!(
-                "(defn confirm [question & {{:keys [default]}}] ({ns_sym}/confirm* question {{\"default\" (when default (name default))}}))"
+                "(defn confirm [question & {{:keys [default]}}] (try ({ns_sym}/confirm* question {{\"default\" (when default (name default))}}) (catch Exception e (if (= \"canceled\" (ex-message e)) (System/exit 1) (throw e)))))"
             )),
         },
         VarDef {
@@ -169,7 +169,7 @@ fn write_describe_response(writer: &mut impl Write) {
             name: "choose",
             meta: "{:doc \"Choose one item from a list. Returns the chosen string.\n  Options: :default\" :arglists ([question options & {:keys [default]}])}",
             code: Some(format!(
-                "(defn choose [question options & {{:keys [default]}}] ({ns_sym}/choose* question options {{\"default\" default}}))"
+                "(defn choose [question options & {{:keys [default]}}] (try ({ns_sym}/choose* question options {{\"default\" default}}) (catch Exception e (if (= \"canceled\" (ex-message e)) (System/exit 1) (throw e)))))"
             )),
         },
         VarDef {
@@ -181,7 +181,7 @@ fn write_describe_response(writer: &mut impl Write) {
             name: "select",
             meta: "{:doc \"Select multiple items from a list. Returns a vector of chosen strings.\n  Options: :default\" :arglists ([question options & {:keys [default]}])}",
             code: Some(format!(
-                "(defn select [question options & {{:keys [default]}}] ({ns_sym}/select* question options {{\"default\" default}}))"
+                "(defn select [question options & {{:keys [default]}}] (try ({ns_sym}/select* question options {{\"default\" default}}) (catch Exception e (if (= \"canceled\" (ex-message e)) (System/exit 1) (throw e)))))"
             )),
         },
         VarDef {
@@ -193,7 +193,7 @@ fn write_describe_response(writer: &mut impl Write) {
             name: "date",
             meta: "{:doc \"Pick a date interactively. Returns a date string.\n  Options: :default, :format, :min-date, :max-date, :starting-date, :week-start, :help-message\" :arglists ([question & {:keys [default format min-date max-date starting-date week-start help-message]}])}",
             code: Some(format!(
-                "(defn date [question & {{:keys [default format min-date max-date starting-date week-start help-message]}}] ({ns_sym}/date* question {{\"default\" default \"format\" format \"min-date\" min-date \"max-date\" max-date \"starting-date\" starting-date \"week-start\" week-start \"help-message\" help-message}}))"
+                "(defn date [question & {{:keys [default format min-date max-date starting-date week-start help-message]}}] (try ({ns_sym}/date* question {{\"default\" default \"format\" format \"min-date\" min-date \"max-date\" max-date \"starting-date\" starting-date \"week-start\" week-start \"help-message\" help-message}}) (catch Exception e (if (= \"canceled\" (ex-message e)) (System/exit 1) (throw e)))))"
             )),
         },
         VarDef {
@@ -205,7 +205,7 @@ fn write_describe_response(writer: &mut impl Write) {
             name: "editor",
             meta: "{:doc \"Open a full text editor for input. Returns the entered text.\n  Options: :default, :help-message, :file-extension\" :arglists ([message & {:keys [default help-message file-extension]}])}",
             code: Some(format!(
-                "(defn editor [message & {{:keys [default help-message file-extension]}}] ({ns_sym}/editor* message {{\"default\" default \"help-message\" help-message \"file-extension\" file-extension}}))"
+                "(defn editor [message & {{:keys [default help-message file-extension]}}] (try ({ns_sym}/editor* message {{\"default\" default \"help-message\" help-message \"file-extension\" file-extension}}) (catch Exception e (if (= \"canceled\" (ex-message e)) (System/exit 1) (throw e)))))"
             )),
         },
         VarDef {
@@ -215,11 +215,12 @@ fn write_describe_response(writer: &mut impl Write) {
                 "(defn menu [heading entries & {{:keys [once default]}}] ",
                 "(let [labels (mapv first entries)] ",
                 "(loop [dflt default] ",
-                "(let [choice ({ns_sym}/choose* heading labels {{\"default\" dflt}}) ",
-                "handler (second (first (filter #(= (first %) choice) entries)))] ",
+                "(let [choice (try ({ns_sym}/choose* heading labels {{\"default\" dflt}}) (catch Exception e (if (= \"canceled\" (ex-message e)) nil (throw e))))] ",
+                "(if (nil? choice) nil ",
+                "(let [handler (second (first (filter #(= (first %) choice) entries)))] ",
                 "(if (nil? handler) nil ",
                 "(do (handler) ",
-                "(if once nil (recur choice))))))))"
+                "(if once nil (recur choice))))))))))"
             ), ns_sym = ns_sym)),
         },
     ];
@@ -311,10 +312,12 @@ fn invoke_script_wizard(args: &[String]) -> Result<String, String> {
         .output()
         .map_err(|e| format!("Failed to spawn: {}", e))?;
 
-    if output.status.success() {
+    let code = output.status.code().unwrap_or(1);
+    if code == 0 {
         Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+    } else if code == 2 {
+        Err("canceled".to_string())
     } else {
-        let code = output.status.code().unwrap_or(1);
         Err(format!("script-wizard exited with code {}", code))
     }
 }
@@ -335,16 +338,18 @@ fn handle_invoke(var: &str, args_json: &str) -> Result<String, String> {
         _ => return Err(format!("Unknown var: {}", var)),
     };
 
-    let result = invoke_script_wizard(&cmd_args)?;
-
-    // Return value based on function type
-    match fn_name {
-        "confirm*" => Ok("true".to_string()),
-        "select*" => {
-            let lines: Vec<&str> = result.lines().collect();
-            serde_json::to_string(&lines).map_err(|e| e.to_string())
-        }
-        _ => serde_json::to_string(&result).map_err(|e| e.to_string()),
+    match invoke_script_wizard(&cmd_args) {
+        Ok(result) => match fn_name {
+            "confirm*" => Ok("true".to_string()),
+            "select*" => {
+                let lines: Vec<&str> = result.lines().collect();
+                serde_json::to_string(&lines).map_err(|e| e.to_string())
+            }
+            _ => serde_json::to_string(&result).map_err(|e| e.to_string()),
+        },
+        Err(e) if e == "canceled" => Err(e),
+        Err(_) if fn_name == "confirm*" => Ok("false".to_string()),
+        Err(e) => Err(e),
     }
 }
 
@@ -371,6 +376,7 @@ fn build_ask_args(args: &[JsonValue]) -> Result<Vec<String>, String> {
             cmd.push(serde_json::to_string(suggestions).unwrap());
         }
     }
+    cmd.extend(["--cancel-code".to_string(), "2".to_string()]);
     Ok(cmd)
 }
 
@@ -386,6 +392,7 @@ fn build_confirm_args(args: &[JsonValue]) -> Result<Vec<String>, String> {
             cmd.push(default.to_string());
         }
     }
+    cmd.extend(["--cancel-code".to_string(), "2".to_string()]);
     Ok(cmd)
 }
 
@@ -412,6 +419,7 @@ fn build_choose_args(args: &[JsonValue]) -> Result<Vec<String>, String> {
             cmd.push(default.to_string());
         }
     }
+    cmd.extend(["--cancel-code".to_string(), "2".to_string()]);
     Ok(cmd)
 }
 
@@ -438,6 +446,7 @@ fn build_select_args(args: &[JsonValue]) -> Result<Vec<String>, String> {
             cmd.push(default.to_string());
         }
     }
+    cmd.extend(["--cancel-code".to_string(), "2".to_string()]);
     Ok(cmd)
 }
 
@@ -464,6 +473,7 @@ fn build_date_args(args: &[JsonValue]) -> Result<Vec<String>, String> {
             }
         }
     }
+    cmd.extend(["--cancel-code".to_string(), "2".to_string()]);
     Ok(cmd)
 }
 
@@ -486,6 +496,7 @@ fn build_editor_args(args: &[JsonValue]) -> Result<Vec<String>, String> {
             }
         }
     }
+    cmd.extend(["--cancel-code".to_string(), "2".to_string()]);
     Ok(cmd)
 }
 
@@ -507,23 +518,15 @@ pub fn run_pod() {
                 let var = msg.get("var").map(|s| s.as_str()).unwrap_or("");
                 let args = msg.get("args").map(|s| s.as_str()).unwrap_or("[]");
 
+                // eprintln!("[pod] invoke var={} args={}", var, args);
                 match handle_invoke(var, args) {
                     Ok(value) => {
+                        // eprintln!("[pod] ok: {}", value);
                         write_invoke_response(&mut writer, id, &value);
                     }
                     Err(e) => {
-                        if e.contains("exited with code") {
-                            let fn_name = var
-                                .strip_prefix(&format!("{}/", NAMESPACE))
-                                .unwrap_or(var);
-                            if fn_name == "confirm*" {
-                                write_invoke_response(&mut writer, id, "false");
-                            } else {
-                                write_invoke_response(&mut writer, id, "null");
-                            }
-                        } else {
-                            write_invoke_error(&mut writer, id, &e);
-                        }
+                        // eprintln!("[pod] err: {}", e);
+                        write_invoke_error(&mut writer, id, &e);
                     }
                 }
             }
