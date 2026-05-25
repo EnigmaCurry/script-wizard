@@ -1,10 +1,12 @@
+use std::io::IsTerminal;
+
 use clap::{Parser, Subcommand};
 mod ask;
 mod example;
 mod pod;
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None, arg_required_else_help = true)]
+#[command(author, version, about, long_about = None)]
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
@@ -140,6 +142,19 @@ enum Commands {
 fn program() -> Result<u8, u8> {
     let cli = Cli::parse();
     match &cli.command {
+        None => {
+            if std::io::stdin().is_terminal() {
+                // stdin is a TTY and no subcommand given: print help
+                use clap::CommandFactory;
+                Cli::command().print_help().unwrap();
+                eprintln!();
+                return Err(1);
+            } else {
+                // stdin is not a TTY: enter pod mode
+                pod::run_pod();
+                return Ok(0);
+            }
+        }
         Some(Commands::Ask {
             question,
             default,
@@ -303,7 +318,6 @@ fn program() -> Result<u8, u8> {
             pod::run_pod();
             Ok(0)
         }
-        None => Err(1),
     }
 }
 

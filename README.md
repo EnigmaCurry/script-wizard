@@ -1,5 +1,9 @@
 # script-wizard
 
+[![crates.io](https://img.shields.io/crates/v/script-wizard)](https://crates.io/crates/script-wizard)
+[![bb compatible](https://raw.githubusercontent.com/babashka/babashka/master/logo/badge.svg)](https://book.babashka.org#badges)
+[![docs.rs](https://img.shields.io/docsrs/script-wizard)](https://docs.rs/script-wizard)
+
 `script-wizard` is a shell script helper program to delegate the
 responsibility of asking questions to the user, asking for
 confirmation, making selections, etc. The normalized response is
@@ -169,6 +173,17 @@ and `menu`):
 (sw/confirm "Continue?" :default :yes)
 (sw/choose "Pick one" ["a" "b" "c"])
 ```
+
+Pod mode is entered automatically when stdin is not a TTY (i.e., when
+input is piped), so you can also load the pod without the explicit
+`"pod"` subcommand:
+
+```clojure
+(pods/load-pod ["script-wizard"])
+```
+
+When stdin is a TTY and no subcommand is given, the help text is
+printed instead.
 
 ## Common options
 
