@@ -51,22 +51,23 @@ jobs:
             tar czvf ../../../${{ matrix.platform.name }} ${{ matrix.platform.bin }}
           fi
           cd -
-        if: startsWith( github.ref, 'refs/tags/v' )
+        if: startsWith( github.ref, 'refs/tags/v' ) || github.event_name == 'workflow_dispatch'
       - name: Generate SHA-256
+        shell: bash
         run: shasum -a 256 ${{ matrix.platform.name }} > ${{ matrix.platform.name }}.sha256
-        if: startsWith( github.ref, 'refs/tags/v' )
+        if: startsWith( github.ref, 'refs/tags/v' ) || github.event_name == 'workflow_dispatch'
       - name: Publish release artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform.name }}
           path: ${{ matrix.platform.name }}
-        if: startsWith( github.ref, 'refs/tags/v' )
+        if: startsWith( github.ref, 'refs/tags/v' ) || github.event_name == 'workflow_dispatch'
       - name: Publish release digests
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform.name }}.sha256
           path: ${{ matrix.platform.name }}.sha256
-        if: startsWith( github.ref, 'refs/tags/v' )
+        if: startsWith( github.ref, 'refs/tags/v' ) || github.event_name == 'workflow_dispatch'
     strategy:
       matrix:
         platform:
