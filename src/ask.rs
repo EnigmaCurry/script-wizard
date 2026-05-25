@@ -187,7 +187,7 @@ pub fn choose(
     }
     let ans: Result<&str, InquireError> = Select::new(question, options.clone())
         .with_starting_cursor(default_index)
-        .with_help_message("↑↓ to move, enter to select, type to filter, ESC to cancel")
+        .with_help_message("up/down to move, enter to select, type to filter, ESC to cancel")
         .prompt();
     match ans {
         Ok(selection) => match numeric {
@@ -212,7 +212,7 @@ pub fn select(question: &str, default: &str, options: Vec<&str>, cancel_code: u8
     }
     let ans = MultiSelect::new(question, options)
         .with_default(&default_indices)
-        .with_help_message("↑↓ to move, space to select one, → to all, ← to none, type to filter, ESC to cancel")
+        .with_help_message("spacebar: toggle one, right/left: select all/none, type to filter, ESC to cancel")
         .prompt();
     match ans {
         Ok(selection) => selection.iter().map(|&x| x.into()).collect(),
@@ -268,6 +268,11 @@ pub fn menu(
     once: &bool,
     cancel_code: u8,
 ) -> Result<usize, u8> {
+    if cfg!(target_os = "windows") {
+        eprintln!("Error: the 'menu' subcommand is not supported on Windows.");
+        eprintln!("Use 'choose' with --numeric to implement your own menu loop.");
+        std::process::exit(1);
+    }
     let mut new_default: String = default.clone().unwrap_or("".to_string());
     loop {
         eprintln!("");

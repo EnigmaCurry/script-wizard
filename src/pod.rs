@@ -295,23 +295,64 @@ fn write_invoke_error(writer: &mut impl Write, id: &str, message: &str) {
 
 fn invoke_script_wizard(args: &[String]) -> Result<String, String> {
     let exe = std::env::current_exe().unwrap_or_else(|_| "script-wizard".into());
-    let tty = std::fs::OpenOptions::new()
-        .read(true)
-        .write(true)
-        .open("/dev/tty")
-        .map_err(|e| format!("Cannot open /dev/tty: {}", e))?;
 
-    let tty_in = tty.try_clone().map_err(|e| format!("Clone tty: {}", e))?;
-    let tty_err = tty.try_clone().map_err(|e| format!("Clone tty: {}", e))?;
+    let mut cmd = Command::new(&exe);
+    cmd.args(args).stdout(Stdio::piped());
 
-    let output = Command::new(&exe)
-        .args(args)
-        .stdin(Stdio::from(tty_in))
-        .stdout(Stdio::piped())
-        .stderr(Stdio::from(tty_err))
+    #[cfg(target_os = "macos")]
+    let saved_stdin = unsafe {
+        // On macOS, crossterm's kqueue can't handle /dev/tty opened
+        // post-fork. Use the pod's inherited stderr (the original pty
+        // slave fd from the shell) for the child's stdin and stderr.
+        let saved = libc::dup(0);
+        libc::dup2(2, 0);
+        libc::tcflush(0, libc::TCIFLUSH);
+
+        cmd.stdin(Stdio::inherit()).stderr(Stdio::inherit());
+
+        saved
+    };
+
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        // On Linux, pass /dev/tty directly as stdin/stderr for the child.
+        let tty = std::fs::OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open("/dev/tty")
+            .map_err(|e| format!("Cannot open /dev/tty: {}", e))?;
+        let tty_err = tty.try_clone().map_err(|e| format!("Clone tty: {}", e))?;
+        cmd.stdin(Stdio::from(tty)).stderr(Stdio::from(tty_err));
+    }
+
+    #[cfg(windows)]
+    {
+        cmd.stdin(Stdio::from(
+            std::fs::OpenOptions::new()
+                .read(true)
+                .open("CONIN$")
+                .map_err(|e| format!("Cannot open CONIN$: {}", e))?,
+        ))
+        .stderr(Stdio::from(
+            std::fs::OpenOptions::new()
+                .write(true)
+                .open("CONOUT$")
+                .map_err(|e| format!("Cannot open CONOUT$: {}", e))?,
+        ));
+    }
+
+    let output = cmd
         .output()
-        .map_err(|e| format!("Failed to spawn: {}", e))?;
+        .map_err(|e| format!("Failed to spawn: {}", e));
 
+    // Restore the pod's original stdin (macOS only)
+    #[cfg(target_os = "macos")]
+    unsafe {
+        libc::dup2(saved_stdin, 0);
+        libc::close(saved_stdin);
+    }
+
+    let output = output?;
     let code = output.status.code().unwrap_or(1);
     if code == 0 {
         Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())

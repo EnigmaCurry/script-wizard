@@ -4,7 +4,7 @@
 
 (require '[babashka.pods :as pods])
 
-(pods/load-pod ["nix" "run" "github:EnigmaCurry/script-wizard" "--" "pod"])
+(pods/load-pod ["script-wizard" "pod"])
 
 (require '[pod.enigmacurry.script-wizard :as wiz]
          '[clojure.string :as str])

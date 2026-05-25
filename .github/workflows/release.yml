@@ -57,13 +57,13 @@ jobs:
         run: sha256sum ${{ matrix.platform.name }} > ${{ matrix.platform.name }}.sha256
         if: startsWith( github.ref, 'refs/tags/v' ) || github.event_name == 'workflow_dispatch'
       - name: Publish release artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.platform.name }}
           path: ${{ matrix.platform.name }}
         if: startsWith( github.ref, 'refs/tags/v' ) || github.event_name == 'workflow_dispatch'
       - name: Publish release digests
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.platform.name }}.sha256
           path: ${{ matrix.platform.name }}.sha256
@@ -85,28 +85,33 @@ jobs:
             name: script-wizard-Linux-aarch64.tar.gz
             command: build
 
-          # - release_for: Windows-x86_64
-          #   os: windows-latest
-          #   target: x86_64-pc-windows-msvc
-          #   bin: script-wizard.exe
-          #   name: script-wizard-Windows-x86_64.zip
-          #   command: both
+          - release_for: Windows-x86_64
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            bin: script-wizard.exe
+            name: script-wizard-Windows-x86_64.zip
+            command: build
 
-          # - release_for: macOS-x86_64
-          #   os: macOS-latest
-          #   target: x86_64-apple-darwin
-          #   bin: script-wizard
-          #   name: script-wizard-Darwin-x86_64.tar.gz
-          #   command: both
+          - release_for: Windows-aarch64
+            os: windows-latest
+            target: aarch64-pc-windows-msvc
+            bin: script-wizard.exe
+            name: script-wizard-Windows-aarch64.zip
+            command: build
 
-          # - release_for: FreeBSD-x86_64
-          #   os: ubuntu-latest
-          #   target: x86_64-unknown-freebsd
-          #   bin: script-wizard
-          #   name: script-wizard-FreeBSD-x86_64.tar.gz
-          #   command: build
+          - release_for: macOS-x86_64
+            os: macos-latest
+            target: x86_64-apple-darwin
+            bin: script-wizard
+            name: script-wizard-Darwin-x86_64.tar.gz
+            command: build
 
-            # more release targets here ...
+          - release_for: macOS-aarch64
+            os: macos-latest
+            target: aarch64-apple-darwin
+            bin: script-wizard
+            name: script-wizard-Darwin-aarch64.tar.gz
+            command: build
 
   release:
     name: Release
@@ -114,18 +119,42 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v8
       with:
         name: script-wizard-Linux-x86_64.tar.gz
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v8
       with:
         name: script-wizard-Linux-x86_64.tar.gz.sha256
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v8
       with:
         name: script-wizard-Linux-aarch64.tar.gz
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v8
       with:
         name: script-wizard-Linux-aarch64.tar.gz.sha256
+    - uses: actions/download-artifact@v8
+      with:
+        name: script-wizard-Windows-x86_64.zip
+    - uses: actions/download-artifact@v8
+      with:
+        name: script-wizard-Windows-x86_64.zip.sha256
+    - uses: actions/download-artifact@v8
+      with:
+        name: script-wizard-Windows-aarch64.zip
+    - uses: actions/download-artifact@v8
+      with:
+        name: script-wizard-Windows-aarch64.zip.sha256
+    - uses: actions/download-artifact@v8
+      with:
+        name: script-wizard-Darwin-x86_64.tar.gz
+    - uses: actions/download-artifact@v8
+      with:
+        name: script-wizard-Darwin-x86_64.tar.gz.sha256
+    - uses: actions/download-artifact@v8
+      with:
+        name: script-wizard-Darwin-aarch64.tar.gz
+    - uses: actions/download-artifact@v8
+      with:
+        name: script-wizard-Darwin-aarch64.tar.gz.sha256
     - name: Release
       uses: softprops/action-gh-release@v2
       if: startsWith(github.ref, 'refs/tags/')
@@ -135,6 +164,14 @@ jobs:
           script-wizard-Linux-x86_64.tar.gz.sha256
           script-wizard-Linux-aarch64.tar.gz
           script-wizard-Linux-aarch64.tar.gz.sha256
+          script-wizard-Windows-x86_64.zip
+          script-wizard-Windows-x86_64.zip.sha256
+          script-wizard-Windows-aarch64.zip
+          script-wizard-Windows-aarch64.zip.sha256
+          script-wizard-Darwin-x86_64.tar.gz
+          script-wizard-Darwin-x86_64.tar.gz.sha256
+          script-wizard-Darwin-aarch64.tar.gz
+          script-wizard-Darwin-aarch64.tar.gz.sha256
 
   publish-crate:
     name: Publish to crates.io
