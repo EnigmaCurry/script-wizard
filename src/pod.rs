@@ -321,6 +321,12 @@ fn invoke_script_wizard(args: &[String]) -> Result<String, String> {
             .write(true)
             .open("/dev/tty")
             .map_err(|e| format!("Cannot open /dev/tty: {}", e))?;
+        // Flush any stale input bytes from the terminal (e.g. leftover
+        // escape sequence fragments from a previous wizard invocation)
+        unsafe {
+            use std::os::unix::io::AsRawFd;
+            libc::tcflush(tty.as_raw_fd(), libc::TCIFLUSH);
+        }
         let tty_err = tty.try_clone().map_err(|e| format!("Clone tty: {}", e))?;
         cmd.stdin(Stdio::from(tty)).stderr(Stdio::from(tty_err));
     }
