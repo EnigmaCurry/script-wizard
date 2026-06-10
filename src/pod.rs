@@ -299,37 +299,19 @@ fn invoke_script_wizard(args: &[String]) -> Result<String, String> {
     let mut cmd = Command::new(&exe);
     cmd.args(args).stdout(Stdio::piped());
 
-    #[cfg(target_os = "macos")]
+    #[cfg(unix)]
     let saved_stdin = unsafe {
-        // On macOS, crossterm's kqueue can't handle /dev/tty opened
-        // post-fork. Use the pod's inherited stderr (the original pty
-        // slave fd from the shell) for the child's stdin and stderr.
+        // Redirect the pod's stdin to the terminal for the child process.
+        // This keeps a tty fd open in the parent during execution, avoiding
+        // the gap where keystrokes accumulate with no reader.
         let saved = libc::dup(0);
-        libc::dup2(2, 0);
+        libc::dup2(2, 0); // stderr is the original terminal
         libc::tcflush(0, libc::TCIFLUSH);
 
         cmd.stdin(Stdio::inherit()).stderr(Stdio::inherit());
 
         saved
     };
-
-    #[cfg(all(unix, not(target_os = "macos")))]
-    {
-        // On Linux, pass /dev/tty directly as stdin/stderr for the child.
-        let tty = std::fs::OpenOptions::new()
-            .read(true)
-            .write(true)
-            .open("/dev/tty")
-            .map_err(|e| format!("Cannot open /dev/tty: {}", e))?;
-        // Flush any stale input bytes from the terminal (e.g. leftover
-        // escape sequence fragments from a previous wizard invocation)
-        unsafe {
-            use std::os::unix::io::AsRawFd;
-            libc::tcflush(tty.as_raw_fd(), libc::TCIFLUSH);
-        }
-        let tty_err = tty.try_clone().map_err(|e| format!("Clone tty: {}", e))?;
-        cmd.stdin(Stdio::from(tty)).stderr(Stdio::from(tty_err));
-    }
 
     #[cfg(windows)]
     {
@@ -351,8 +333,8 @@ fn invoke_script_wizard(args: &[String]) -> Result<String, String> {
         .output()
         .map_err(|e| format!("Failed to spawn: {}", e));
 
-    // Restore the pod's original stdin (macOS only)
-    #[cfg(target_os = "macos")]
+    // Restore the pod's original stdin
+    #[cfg(unix)]
     unsafe {
         libc::dup2(saved_stdin, 0);
         libc::close(saved_stdin);
