@@ -301,16 +301,20 @@ fn invoke_script_wizard(args: &[String]) -> Result<String, String> {
 
     #[cfg(unix)]
     let saved_stdin = unsafe {
-        // Redirect the pod's stdin to the terminal for the child process.
-        // This keeps a tty fd open in the parent during execution, avoiding
-        // the gap where keystrokes accumulate with no reader.
-        let saved = libc::dup(0);
-        libc::dup2(2, 0); // stderr is the original terminal
-        libc::tcflush(0, libc::TCIFLUSH);
-
-        cmd.stdin(Stdio::inherit()).stderr(Stdio::inherit());
-
-        saved
+        use std::os::unix::io::FromRawFd;
+        // Open /dev/tty and dup it so we pass a copy to the child
+        // while the parent keeps a fd open (preventing input buffer gaps).
+        let tty_fd = libc::open(b"/dev/tty\0".as_ptr() as *const _, libc::O_RDWR);
+        if tty_fd < 0 {
+            return Err(format!("Cannot open /dev/tty: {}", std::io::Error::last_os_error()));
+        }
+        libc::tcflush(tty_fd, libc::TCIFLUSH);
+        // Dup for child stdin and stderr; parent keeps tty_fd open
+        let child_in = libc::dup(tty_fd);
+        let child_err = libc::dup(tty_fd);
+        cmd.stdin(Stdio::from(std::os::unix::io::OwnedFd::from_raw_fd(child_in)))
+           .stderr(Stdio::from(std::os::unix::io::OwnedFd::from_raw_fd(child_err)));
+        tty_fd
     };
 
     #[cfg(windows)]
@@ -333,10 +337,9 @@ fn invoke_script_wizard(args: &[String]) -> Result<String, String> {
         .output()
         .map_err(|e| format!("Failed to spawn: {}", e));
 
-    // Restore the pod's original stdin
+    // Close the parent's tty fd (child fds are already closed)
     #[cfg(unix)]
     unsafe {
-        libc::dup2(saved_stdin, 0);
         libc::close(saved_stdin);
     }
 
