@@ -176,15 +176,22 @@ pub fn choose(
     numeric: &bool,
     cancel_code: u8,
 ) -> String {
-    let default_index: usize;
-    match default.trim().parse::<usize>() {
-        Ok(n) => {
-            default_index = n;
-        }
-        Err(_) => {
-            default_index = options.iter().position(|&r| r == default).unwrap_or(0);
-        }
-    }
+    // Resolve the default to a starting cursor index.
+    //   --numeric mode: default is an index into `options`.
+    //   value mode:     default is matched against option strings.
+    // Always clamp to the valid range so an out-of-bounds default doesn't
+    // cause inquire to Err immediately at startup (previously: default="8"
+    // on a 5-item list crashed the pod without user input, since inquire's
+    // Select rejects with_starting_cursor > options.len()).
+    let raw_index: usize = if *numeric {
+        default.trim().parse::<usize>().unwrap_or(0)
+    } else {
+        options
+            .iter()
+            .position(|&r| r == default)
+            .unwrap_or(0)
+    };
+    let default_index = raw_index.min(options.len().saturating_sub(1));
     let ans: Result<&str, InquireError> = Select::new(question, options.clone())
         .with_starting_cursor(default_index)
         .with_help_message("up/down to move, enter to select, type to filter, ESC to cancel")

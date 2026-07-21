@@ -304,14 +304,29 @@ fn invoke_script_wizard(args: &[String]) -> Result<String, String> {
         use std::os::unix::io::FromRawFd;
         // Open /dev/tty and dup it so we pass a copy to the child
         // while the parent keeps a fd open (preventing input buffer gaps).
-        let tty_fd = libc::open(b"/dev/tty\0".as_ptr() as *const _, libc::O_RDWR);
+        // O_CLOEXEC so unrelated child spawns don't inherit this fd.
+        let tty_fd = libc::open(
+            b"/dev/tty\0".as_ptr() as *const _,
+            libc::O_RDWR | libc::O_CLOEXEC,
+        );
         if tty_fd < 0 {
             return Err(format!("Cannot open /dev/tty: {}", std::io::Error::last_os_error()));
         }
         libc::tcflush(tty_fd, libc::TCIFLUSH);
-        // Dup for child stdin and stderr; parent keeps tty_fd open
+        // Dup for child stdin and stderr; parent keeps tty_fd open.
         let child_in = libc::dup(tty_fd);
+        if child_in < 0 {
+            let err = std::io::Error::last_os_error();
+            libc::close(tty_fd);
+            return Err(format!("dup /dev/tty for stdin: {}", err));
+        }
         let child_err = libc::dup(tty_fd);
+        if child_err < 0 {
+            let err = std::io::Error::last_os_error();
+            libc::close(child_in);
+            libc::close(tty_fd);
+            return Err(format!("dup /dev/tty for stderr: {}", err));
+        }
         cmd.stdin(Stdio::from(std::os::unix::io::OwnedFd::from_raw_fd(child_in)))
            .stderr(Stdio::from(std::os::unix::io::OwnedFd::from_raw_fd(child_err)));
         tty_fd
