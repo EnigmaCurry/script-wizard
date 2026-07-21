@@ -10,12 +10,13 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+        cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
       in
       {
         packages = {
           default = pkgs.rustPlatform.buildRustPackage {
             pname = "script-wizard";
-            version = "0.1.36";
+            version = cargoToml.package.version;
 
             src = ./.;
 
